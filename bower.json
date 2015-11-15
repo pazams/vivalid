@@ -1,0 +1,28 @@
+{
+  "name": "vivalid",
+  "version": "0.1.0",
+  "homepage": "https://github.com/pazams/vivalid",
+  "authors": [
+    "pazams <maor@pazams.com>"
+  ],
+  "description": "client side validations with async (client-server) support",
+  "main": "dist/vivalid-bundle.js",
+  "moduleType": [
+    "amd",
+    "globals",
+    "node"
+  ],
+  "keywords": [
+    "client",
+    "validation",
+    "async"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
