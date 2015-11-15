@@ -39,7 +39,7 @@ addValidatorBuilder('maxlength',function(ValidationState,stateEnum,options){
 });
 ```
 
-## Custom Async rule example (dummy asyc with setTimeout, in place of real word AJAX).
+## Custom Async rule example (dummy async with setTimeout, in place of AJAX).
 ```js
 var addValidatorBuilder = vivalid.validatorRepo.addBuilder;
 addValidatorBuilder('exisitingUserBob',function(ValidationState,stateEnum,options){
