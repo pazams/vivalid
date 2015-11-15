@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<script src="https://raw.githubusercontent.com/pazams/vivalid/master/dist/vivalid-bundle.min.js"></script>
+<script src="https://raw.githubusercontent.com/pazams/vivalid-rules-core/master/dist/vivalid-rules-core-bundle.min.js"></script>
+
+</head>
+
+<body>
+
+<h1>Sanity</h1>
+
+<form id="MainForm" data-vivalid-group data-vivalid-on-validation='["onValidationSuccess", "onValidationFailure"]'
+    data-vivalid-pending-ui='["pendingUiStart", "pendingUiStop"]' >
+    <div>
+    <input id="Name" type="text" placeholder="First Name" data-vivalid-tuples='[["requiered",{}],["exisitingUserBob",{}],["betweenlength",{"min": 4, "max": 10}]]' />
+    </div>
+
+    <div>
+    <input id="Email" type="email" placeholder="Email" />
+    </div>
+   <div>
+        <input id="SendButton" type="button" value="send"  data-vivalid-submit />
+    </div>
+
+</form>
+
+<script>
+
+var addValidatorBuilder = vivalid.validatorRepo.addBuilder;
+var addCallback = vivalid.htmlInterface.addCallback;
+var initAll = vivalid.htmlInterface.initAll;
+
+addValidatorBuilder('exisitingUserBob',function(ValidationState,stateEnum,options){
+
+        return function(value, callback){
+
+        var msg = 'user bob exists';
+
+        setTimeout(dummyServiceCall, 5000);
+
+        return new ValidationState('', stateEnum.pending);
+
+        function dummyServiceCall() {
+
+        if (value.indexOf('bob')!==-1) {
+        callback(new ValidationState(msg, stateEnum.invalid));
+        }
+        else {
+        callback(new ValidationState('', stateEnum.valid));
+        }
+
+
+        }
+
+        };
+});
+
+
+addCallback('onInputValidationResult',
+        function (el,validationsResult){
+
+        var msgEl = el.parentNode.querySelector('.rm-tip-message');
+        var displayEl = el.parentNode.querySelector('.error');
+
+        if(validationsResult.stateEnum === stateEnum.invalid){
+        displayEl.style.display = 'block';
+        msgEl.innerHTML = validationsResult.message;
+        }
+
+        else {
+        displayEl.style.display = 'none';
+        msgEl.innerHTML = '';
+        }
+
+        });
+
+
+addCallback('onValidationSuccess', function(){
+        alert('HOORAY!!!! input group is valid and form will submit');
+        });
+
+addCallback('onValidationFailure', function(invalid,pending,valid){
+        alert('input group is invalid!: '+invalid+ ' invalid, ' +pending+' pending, and ' +valid+' valid ' );
+        });
+
+addCallback('pendingUiStart', function(inputElems,submitElems){ 
+        inputElems.forEach(function(input){
+            input.disabled=true;
+            });
+
+        submitElems.forEach(function(submit){
+            submit.disabled=true;
+            });
+
+        this.style.backgroundColor = 'green';
+        });
+
+addCallback('pendingUiStop' ,function(inputElems,submitElems){
+        inputElems.forEach(function(input){
+            input.disabled=false;
+            });
+
+        submitElems.forEach(function(submit){
+            submit.disabled=false;
+            });
+
+        this.style.backgroundColor = 'blue';
+        });
+
+
+
+function onGroupStatesChangedCallback() {
+}
+
+function onGroupPendingChangedCallback(isPending){
+}
+
+initAll();
+
+</script>
+
+</body>
+
+</html>
