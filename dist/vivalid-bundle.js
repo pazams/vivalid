@@ -501,7 +501,7 @@ var keyStrokedInputTypes = constants.keyStrokedInputTypes;
  * creates a new Input object wrapping around a DOM object.
  * @memberof! vivalid 
  * @class
- * @example new Input(document.getElementById('Name'), [['requiered',{msg: 'custom requiered message'}],['max',{max: 10}]])
+ * @example new Input(document.getElementById('Name'), [['required',{msg: 'custom required message'}],['max',{max: 10}]])
  * @param {HTMLElement} el the DOM object to wrap. For radios and checkboxes, pass only 1 element- the class will find it's siblings with the same name attribute.
  * @param {_internal.validatorsNameOptionsTuple[]} validatorsNameOptionsTuples <b> the order matters- the input's state is the first {@link _internal.validatorsNameOptionsTuple validatorsNameOptionsTuple} that evulates to a non-valid (pending or invalid) state. </b>
  * @param {function} [onInputValidationResult] Signature of {@link _internal.onInputValidationResult onInputValidationResult}. A function to handle an input state or message change. If not passed, {@link _internal.defaultOnInputValidationResult defaultOnInputValidationResult} will be used.
@@ -796,7 +796,7 @@ module.exports = Input;
  *  @name validatorsNameOptionsTuple
  *  @type {array}
  *  @memberof! _internal
- *  @example ['requiered',{msg: 'custom requiered message'}]
+ *  @example ['required',{msg: 'custom required message'}]
  */
 
 /** A function to handle an input state or message change
@@ -829,7 +829,7 @@ module.exports = stateEnum;
  * {constructor} creates a new ValidationState object with a validation message and state.
  * @memberof! _internal
  * @class
- * @example new ValidationState('requiered',stateEnum.invalid)
+ * @example new ValidationState('required',stateEnum.invalid)
  * @param {string} message the validation message.
  * @param {number} stateEnum the int value of the enum.
  */
@@ -854,7 +854,7 @@ var validatorBuildersRepository = {};
  * Adds validator builder. Use to create custom validation rules.
  * @memberof! vivalid.validatorRepo
  * @function
- * @example vivalid.validatorRepo.addBuilder('requiered',fn);
+ * @example vivalid.validatorRepo.addBuilder('required',fn);
  * @param {string} name validator name.
  * @param {function} fn a validation builder see *** for  more details.
  */

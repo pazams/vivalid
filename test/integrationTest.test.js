@@ -43,11 +43,11 @@ describe('validations', function() {
     before(function() {
 
 
-        addValidatorBuilder('requiered',function(ValidationState,stateEnum,options){
+        addValidatorBuilder('required',function(ValidationState,stateEnum,options){
 
             return function(value) {
 
-                var msg = options.msg || 'this field is requiered';
+                var msg = options.msg || 'this field is required';
 
                 if (!value){
                     return new ValidationState(msg, stateEnum.invalid);
