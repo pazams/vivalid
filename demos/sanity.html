@@ -15,7 +15,7 @@
 <form id="MainForm" data-vivalid-group data-vivalid-on-validation='["onValidationSuccess", "onValidationFailure"]'
     data-vivalid-pending-ui='["pendingUiStart", "pendingUiStop"]' >
     <div>
-    <input id="Name" type="text" placeholder="First Name" data-vivalid-tuples='[["requiered",{}],["exisitingUserBob",{}],["betweenlength",{"min": 4, "max": 10}]]' />
+    <input id="Name" type="text" placeholder="First Name" data-vivalid-tuples='[["required",{}],["exisitingUserBob",{}],["betweenlength",{"min": 4, "max": 10}]]' />
     </div>
 
     <div>
@@ -58,26 +58,6 @@ addValidatorBuilder('exisitingUserBob',function(ValidationState,stateEnum,option
         };
 });
 
-
-addCallback('onInputValidationResult',
-        function (el,validationsResult){
-
-        var msgEl = el.parentNode.querySelector('.rm-tip-message');
-        var displayEl = el.parentNode.querySelector('.error');
-
-        if(validationsResult.stateEnum === stateEnum.invalid){
-        displayEl.style.display = 'block';
-        msgEl.innerHTML = validationsResult.message;
-        }
-
-        else {
-        displayEl.style.display = 'none';
-        msgEl.innerHTML = '';
-        }
-
-        });
-
-
 addCallback('onValidationSuccess', function(){
         alert('HOORAY!!!! input group is valid and form will submit');
         });
@@ -86,7 +66,7 @@ addCallback('onValidationFailure', function(invalid,pending,valid){
         alert('input group is invalid!: '+invalid+ ' invalid, ' +pending+' pending, and ' +valid+' valid ' );
         });
 
-addCallback('pendingUiStart', function(inputElems,submitElems){ 
+addCallback('pendingUiStart', function(inputElems,submitElems){
         inputElems.forEach(function(input){
             input.disabled=true;
             });
