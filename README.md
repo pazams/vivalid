@@ -12,6 +12,7 @@ see [here](http://pazams.github.io/vivalid/documentation/vivalid.html)
 save these and include them in the same order:
 
 https://raw.githubusercontent.com/pazams/vivalid/master/dist/vivalid-bundle.min.js
+
 https://raw.githubusercontent.com/pazams/vivalid-rules-core/master/dist/vivalid-rules-core-bundle.min.js
 
 ## Include from package managers
