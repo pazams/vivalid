@@ -1,11 +1,11 @@
 # ViValid [![Build Status](https://travis-ci.org/pazams/vivalid.svg)](https://travis-ci.org/pazams/vivalid)
 
 ## Overview
-This library was created to address client side validations that needs also an AJAX server response to verify an input constraint.
-Consider a case of a registration form where a user needs to fill out his personal details while also choosing a username.
-For data integrity- all input constraints are validated on the server side upon data submission.
-For user experience- it is also worthy to validate all input constraints on the client side as the user interacts with your application. Some constraints, such as "existing user" or "valid location", needs to be validated at the background.
-The library is especially useful for SPAs.
+This library was created to address client side validations that needs also an AJAX server response to verify an input constraint.  
+Consider a case of a registration form where a user needs to fill out his personal details while also choosing a username.  
+For data integrity- all input constraints are validated on the server side upon data submission.  
+For user experience- it is also worthy to validate all input constraints on the client side as the user interacts with your application.  
+Some constraints, such as "existing user" or "valid location", need to be validated at the background, and this is where this library plays well. It is also especially useful for SPAs.
 
 ## Main features
 ### Consolidates Sync and Async validations
