@@ -159,7 +159,7 @@ function initAll() {
 
     function registerAllFromDataAttribtues(){
 
-        var _nextGroupId = 0;
+        var _nextGroupId = 1;
 
         // es6 map would have been nice here, but this lib is intended to run on es5 browsers. integrating Babel might work.
         var groupIdToInputs = {};
