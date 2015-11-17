@@ -1,5 +1,4 @@
 # ViValid [![Build Status](https://travis-ci.org/pazams/vivalid.svg)](https://travis-ci.org/pazams/vivalid)
-validation rules are seperated from this library. for common validation rules, see https://github.com/pazams/vivalid-rules-core
 
 ## Overview
 This library was created to address client side validations that needs also an AJAX server response to verify an input constraint.
