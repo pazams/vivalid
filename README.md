@@ -10,7 +10,7 @@ Some constraints, such as "existing user" or "valid location", need to be valida
 ## Main features
 ### Consolidates Sync and Async validations
 ### Full UI control 
-Either edit the UI through a CSS rule for .vivalid-error , or gain complete control by passing a [callback](http://pazams.github.io/vivalid/documentation/-_internal.html#..onInputValidationResult) that will be called with a DOM element, validation message, and validation state.
+Either edit the UI through a CSS rule for `.vivalid-error` , or gain complete control by passing a [callback](http://pazams.github.io/vivalid/documentation/-_internal.html#..onInputValidationResult) that will be called with a DOM element, validation message, and validation state.
 ### Data attributes interface
 Use this library with full javascript interface, or the data attributes html interface (with js to only define callbacks).
 ### Separation of validator rules
