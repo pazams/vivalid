@@ -175,5 +175,8 @@ var addValidatorBuilder = vivalid.validatorRepo.addBuilder;
     initAll();
 ```
 
+## Contributers
+read [this](https://github.com/pazams/vivalid/issues/1) before attempting to `gulp build`
+
 ## More demos
 Coming soon
