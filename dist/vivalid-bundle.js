@@ -1,4 +1,4 @@
-(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.vivalid = f()}})(function(){var define,module,exports;return (require=(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.vivalid = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 module.exports = {
     VERSION: '0.1.0',
     DEBUG: false,
@@ -587,8 +587,8 @@ function Input(el, validatorsNameOptionsTuples, onInputValidationResult){
             errorDiv = getExistingErrorDiv(el);
             if(errorDiv) {
                 errorDiv.parentNode.removeChild(errorDiv);
-                el.style.borderStyle = null;
-                el.style.borderColor = null;
+                el.style.borderStyle = "";
+                el.style.borderColor = "";
             }
         }
 
@@ -896,7 +896,6 @@ module.exports = {
 var Input = require('./input');
 var InputGroup = require('./input-group');
 var validatorRepo = require('./validator-repo');
-var stateEnum = require('./state-enum');
 var htmlInterface = require('./html-interface');
 var constants = require('./constants');
 
@@ -912,5 +911,5 @@ module.exports = {
     _ERROR: constants.ERROR
 };
 
-},{"./constants":1,"./html-interface":3,"./input":5,"./input-group":4,"./state-enum":6,"./validator-repo":8}]},{},["vivalid"]))("vivalid")
+},{"./constants":1,"./html-interface":3,"./input":5,"./input-group":4,"./validator-repo":8}]},{},["vivalid"])("vivalid")
 });
