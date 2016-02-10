@@ -260,10 +260,4 @@ describe('Blur-only inputs', function() {
 });
 
 
-
-
-
-// data-vivalid-blur-only
-
-
 });
