@@ -274,7 +274,9 @@ function vivalidInputFromElem(el){
         onInputValidationResult = $$.getDataSet(el,'vivalidResult');
     }
 
-    return new Input(el,tuplesArray,callbacks[onInputValidationResult]);
+    var isBlurOnly = $$.hasDataSet(el,'vivalidBlurOnly');
+
+    return new Input(el,tuplesArray,callbacks[onInputValidationResult],isBlurOnly);
 }
 
 
@@ -533,7 +535,7 @@ var keyStrokedInputTypes = constants.keyStrokedInputTypes;
  * @param {_internal.validatorsNameOptionsTuple[]} validatorsNameOptionsTuples <b> the order matters- the input's state is the first {@link _internal.validatorsNameOptionsTuple validatorsNameOptionsTuple} that evulates to a non-valid (pending or invalid) state. </b>
  * @param {function} [onInputValidationResult] Signature of {@link _internal.onInputValidationResult onInputValidationResult}. A function to handle an input state or message change. If not passed, {@link _internal.defaultOnInputValidationResult defaultOnInputValidationResult} will be used.
  */
-function Input(el, validatorsNameOptionsTuples, onInputValidationResult){
+function Input(el, validatorsNameOptionsTuples, onInputValidationResult, isBlurOnly){
 
     if (validInputTagNames.indexOf(el.nodeName.toLowerCase()) === -1){
         throw 'only operates on the following html tags: ' + validInputTagNames.toString();
@@ -544,6 +546,7 @@ function Input(el, validatorsNameOptionsTuples, onInputValidationResult){
     this.el = el;
     this.validators = buildValidators();
     this.onInputValidationResult = onInputValidationResult || defaultOnInputValidationResult;
+    this.isBlurOnly = isBlurOnly;
     this.isNoneChecked = false;
 
     this.validationState = new ValidationState('', stateEnum.valid);
@@ -723,7 +726,9 @@ Input.prototype = (function() {
                 {
                     validationsResult = validatorResult;
                     validatorName = validator.name;
-                    this.changeEventType('input'); //TODO: call only once?
+                    if(!this.isBlurOnly) {
+                        this.changeEventType('input'); //TODO: call only once?
+                    }
                     break;
                 }
 
@@ -740,7 +745,12 @@ Input.prototype = (function() {
 
     function addChangeListener(){
         if (this.isKeyed){
-            this.el.addEventListener('input', function () { this.isChanged = true;}, false);
+            if(this.isBlurOnly){
+                return;
+            }
+            else{
+                this.el.addEventListener('input', function () { this.isChanged = true;}, false);
+            }
         }
 
         else if (this.elName === 'input' && (this.elType === 'radio' || this.elType === 'checkbox')){

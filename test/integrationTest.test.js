@@ -192,9 +192,72 @@ describe('Sync', function() {
     });
 
 
+});
 
 
+describe('Blur-only inputs', function() {
+
+
+    // inject the HTML fixture for the tests
+    beforeEach(function() {
+        // Why this line? See: https://github.com/billtrik/karma-fixture/issues/3
+        fixture.base = 'test';
+        fixture.load('integrationTest.fixture.html');
+
+        selectFormElements(4);
+        initGroup(Form);
+
+    });
+
+    // remove the html fixture from the DOM
+    afterEach(function() {
+        fixture.cleanup();
+    });
+
+
+    // UX/UI
+
+    it('Blur-only: should not display any errors before interacting with the inputs', function() {
+        expect(!isErrorDisplayed(Name) && !isErrorDisplayed(Email)).to.be.ok;
+    });
+
+    it('Blur-only: should display all invalid errors after submitting, even without interacting with the inputs', function() {
+        SendButton.click();
+        expect(isErrorDisplayed(Name) && isErrorDisplayed(Email)).to.be.ok;
+    });
+
+    it('Blur-only: should not display an error before first blur (focus out)', function() {
+
+        Name.dispatchEvent(clickEvent);
+        Name.value = "John Doe";
+
+        expect(!isErrorDisplayed(Name)).to.be.ok;
+    });
+
+    it('Blur-only: should display an error after first blur (focus out)', function() {
+
+        Name.dispatchEvent(clickEvent);
+
+        Name.value = "John Doe";
+        Name.dispatchEvent(blurEvent);
+
+        expect(isErrorDisplayed(Name)).to.be.ok;
+    });
+
+    it('Blur-only: should ***NOT*** respond to fixes as they are typed, after first blur (focus out)', function() {
+
+        Name.dispatchEvent(clickEvent);
+
+        Name.value = "John Doe";
+        Name.dispatchEvent(blurEvent);
+
+        Name.value = "John";
+        Name.dispatchEvent(inputEvent);
+
+        expect(isErrorDisplayed(Name)).to.be.ok;
+    });
 
 });
+
 
 });
