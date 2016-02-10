@@ -618,8 +618,8 @@ function Input(el, validatorsNameOptionsTuples, onInputValidationResult, isBlurO
             errorDiv = getExistingErrorDiv(el);
             if(errorDiv) {
                 errorDiv.parentNode.removeChild(errorDiv);
-                el.style.borderStyle = null;
-                el.style.borderColor = null;
+                el.style.borderStyle = "";
+                el.style.borderColor = "";
                 $$.removeClass(el,"vivalid-error-input");
             }
         }
@@ -935,7 +935,6 @@ module.exports = {
 var Input = require('./input');
 var InputGroup = require('./input-group');
 var validatorRepo = require('./validator-repo');
-var stateEnum = require('./state-enum');
 var htmlInterface = require('./html-interface');
 var constants = require('./constants');
 
@@ -951,5 +950,5 @@ module.exports = {
     _ERROR: constants.ERROR
 };
 
-},{"./constants":1,"./html-interface":3,"./input":5,"./input-group":4,"./state-enum":6,"./validator-repo":8}]},{},["vivalid"]))("vivalid")
+},{"./constants":1,"./html-interface":3,"./input":5,"./input-group":4,"./validator-repo":8}]},{},["vivalid"]))("vivalid")
 });
