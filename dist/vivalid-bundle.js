@@ -87,6 +87,30 @@ function toDashed(name) {
     });
 }
 
+// from http://jaketrent.com/post/addremove-classes-raw-javascript/
+// used instead of classList because of lacking browser support
+function hasClass(el, className) {
+  if (el.classList)
+    return el.classList.contains(className)
+  else
+    return !!el.className.match(new RegExp('(\\s|^)' + className + '(\\s|$)'))
+}
+
+function addClass(el, className) {
+  if (el.classList)
+    el.classList.add(className)
+  else if (!hasClass(el, className)) el.className += " " + className
+}
+
+function removeClass(el, className) {
+  if (el.classList)
+    el.classList.remove(className)
+  else if (hasClass(el, className)) {
+    var reg = new RegExp('(\\s|^)' + className + '(\\s|$)')
+    el.className=el.className.replace(reg, ' ')
+  }
+}
+
 
 
 module.exports = {
@@ -96,7 +120,9 @@ module.exports = {
     getClosestParentByAttribute: getClosestParentByAttribute,
     getChildrenByAttribute: getChildrenByAttribute,
     ready: ready,
-    toArray: toArray
+    toArray: toArray,
+    addClass: addClass,
+    removeClass: removeClass
 };
 
 
@@ -493,6 +519,7 @@ var validatorRepo = require('./validator-repo');
 var stateEnum = require('./state-enum');
 var ValidationState = require('./validation-state');
 var constants = require('./constants');
+var $$ = require('./dom-helpers');
 
 var validInputTagNames = constants.validInputTagNames;
 var keyStrokedInputTypes = constants.keyStrokedInputTypes;
@@ -581,6 +608,7 @@ function Input(el, validatorsNameOptionsTuples, onInputValidationResult){
 
             el.style.borderStyle = "solid";
             el.style.borderColor = "#ff0000";
+            $$.addClass(el,"vivalid-error-input");
         }
 
         else {
@@ -589,6 +617,7 @@ function Input(el, validatorsNameOptionsTuples, onInputValidationResult){
                 errorDiv.parentNode.removeChild(errorDiv);
                 el.style.borderStyle = null;
                 el.style.borderColor = null;
+                $$.removeClass(el,"vivalid-error-input");
             }
         }
 
@@ -809,7 +838,7 @@ module.exports = Input;
  *  @param {object} stateEnum {@link _internal.stateEnum stateEnum}
  */
 
-},{"./constants":1,"./state-enum":6,"./validation-state":7,"./validator-repo":8}],6:[function(require,module,exports){
+},{"./constants":1,"./dom-helpers":2,"./state-enum":6,"./validation-state":7,"./validator-repo":8}],6:[function(require,module,exports){
 /**
  * An Enum with 3 states: invalid , pending , valid .
  * @memberof! _internal
