@@ -92,6 +92,14 @@ describe('validations', function() {
 
         });
 
+        addCallback('onBeforeValidation' ,function(input){
+
+        });
+
+        addCallback('onAfterValidation' ,function(input){
+
+        });
+
     });
 
 
@@ -158,11 +166,9 @@ describe('Async', function() {
 
 });
 
+describe('optional & required callbacks', function() {
 
-
-describe('Sync', function() {
-
-    it('should not require passing pendingUi callbacks', function() {
+    it('should not require passing pendingUi or onBefore/onAfterValidation callbacks', function() {
 
         // Why this line? See: https://github.com/billtrik/karma-fixture/issues/3
         fixture.base = 'test';
@@ -194,6 +200,58 @@ describe('Sync', function() {
 
 });
 
+/* use sinon to test these callbacks */
+/*
+   describe('onBefore/onAfter Validation', function() {
+
+   it('should call onBeforeValidation', function() {
+
+        // Why this line? See: https://github.com/billtrik/karma-fixture/issues/3
+        fixture.base = 'test';
+        fixture.load('integrationTest.fixture.html');
+
+        selectFormElements(5);
+        initGroup(Form);
+
+        Name.dispatchEvent(clickEvent);
+
+        Name.value = "John Doe";
+        Name.dispatchEvent(blurEvent);
+
+
+        // works, but improve to test the throws of initAll();
+        // instead of dummy test below
+        expect(true).to.be.ok;
+
+        fixture.cleanup();
+        });
+
+        it('should call onAfterValidation', function() {
+
+        // Why this line? See: https://github.com/billtrik/karma-fixture/issues/3
+        fixture.base = 'test';
+        fixture.load('integrationTest.fixture.html');
+
+        selectFormElements(5);
+        initGroup(Form);
+
+        Name.dispatchEvent(clickEvent);
+
+        Name.value = "John Doe";
+        Name.dispatchEvent(blurEvent);
+
+
+    // works, but improve to test the throws of initAll();
+    // instead of dummy test below
+    expect(true).to.be.ok;
+
+    fixture.cleanup();
+    });
+
+
+
+    });
+    */
 
 describe('Blur-only inputs', function() {
 
