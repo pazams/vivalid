@@ -68,6 +68,24 @@
 
 </form>
 
+<form id="Form5" data-vivalid-group data-vivalid-on-validation='["onValidationSuccess", "onValidationFailure"]' data-vivalid-before-validation="onBeforeValidation"
+data-vivalid-after-validation="onAfterValidation"> 
+    <div>
+        <input id="Name5" type="text" placeholder="First Name" data-vivalid-tuples='[["required",{}],["maxlength", {"max": 4}]]' data-vivalid-blur-only />
+    </div>
+
+    <div>
+    <input id="Email5" type="text" placeholder="Email" data-vivalid-tuples='[["required",{}]]' data-vivalid-blur-only />
+    </div>
+   <div>
+        <input id="SendButton5" type="button" value="send"  data-vivalid-submit />
+    </div>
+
+
+</form>
+
+
+
 
 </body>
 

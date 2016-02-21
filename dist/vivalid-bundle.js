@@ -234,6 +234,8 @@ function createGroupFromDataAttribtues(groupElem,inputElems){
     var pendingUi = [null,null];
     var groupStatesChanged;
     var groupPendingChanged;
+    var onBeforeValidation;
+    var onAfterValidation;
 
     if ($$.hasDataSet(groupElem,'vivalidOnValidation')){
         onValidation = JSON.parse($$.getDataSet(groupElem,'vivalidOnValidation'));
@@ -253,6 +255,14 @@ function createGroupFromDataAttribtues(groupElem,inputElems){
         groupPendingChanged = $$.getDataSet(groupElem,'vivalidPendingChanged');
     }
 
+   if ($$.hasDataSet(groupElem,'vivalidBeforeValidation')){
+        onBeforeValidation = $$.getDataSet(groupElem,'vivalidBeforeValidation');
+    }
+
+   if ($$.hasDataSet(groupElem,'vivalidAfterValidation')){
+        onAfterValidation = $$.getDataSet(groupElem,'vivalidAfterValidation');
+    }
+
     new InputGroup(inputs,
                    $$.getChildrenByAttribute(groupElem,'vivalidSubmit'),
                    callbacks[onValidation[0]],
@@ -260,7 +270,9 @@ function createGroupFromDataAttribtues(groupElem,inputElems){
                    callbacks[pendingUi[0]],
                    callbacks[pendingUi[1]],
                    groupStatesChanged,
-                   groupPendingChanged);
+                   groupPendingChanged,
+                   callbacks[onBeforeValidation],
+                   callbacks[onAfterValidation]);
 }
 
 
@@ -309,8 +321,11 @@ var ERROR = require('./constants').ERROR;
  * @param {function} [pendingUiStop] signature of {@link _internal.pendingUiStop pendingUiStop}. highly recommneded when using asyc client-server validations. A function called when leaving a group pending state after a submitElem is clicked. Use this function to undo the UX effects taken inside pendingUiStart.
  * @param {function} [groupStatesChanged]
  * @param {function} [groupPendingChanged]
+ * @param {function} [onBeforeValidation] Signature of {@link _internal.onBeforeValidation onBeforeValidation}. A function to be called before triggering any of the input's validators
+ * @param {function} [onAfterValidation] Signature of {@link _internal.onAfterValidation onAfterValidation}. A function to be called after triggering all of the input's validators
+
  */
-function InputGroup(inputsArray,submitElems,onValidationSuccess,onValidationFailure,pendingUiStart,pendingUiStop, groupStatesChanged, groupPendingChanged){
+function InputGroup(inputsArray,submitElems,onValidationSuccess,onValidationFailure,pendingUiStart,pendingUiStop, groupStatesChanged, groupPendingChanged, onBeforeValidation, onAfterValidation){
 
     if(!onValidationSuccess || !onValidationFailure) throw ERROR.mandatorySuccessFailure;
 
@@ -324,6 +339,9 @@ function InputGroup(inputsArray,submitElems,onValidationSuccess,onValidationFail
     this.pendingUiStart = pendingUiStart;
     this.pendingUiStop = pendingUiStop;
     this.groupStatesChanged = groupStatesChanged;
+    this.onBeforeValidation = onBeforeValidation;
+    this.onAfterValidation = onAfterValidation;
+
 
     this.groupPendingChangedListeners = [];
     this.groupPendingChangedListeners.push(
@@ -516,6 +534,20 @@ module.exports = InputGroup;
  *  @param {HTMLElement[]} submitElems the group's submit elements
  */
 
+/** A function to be called before triggering any of the input's validators
+ *  @name onBeforeValidation
+ *  @function
+ *  @memberof! _internal
+ *  @param {HTMLElement} el the input's DOM object.
+ */
+
+/** A function to be called after triggering all of the input's validators
+ *  @name onAfterValidation
+ *  @function
+ *  @memberof! _internal
+ *  @param {HTMLElement} el the input's DOM object.
+ */
+
 },{"./constants":1,"./input":5,"./state-enum":6}],5:[function(require,module,exports){
 var validatorRepo = require('./validator-repo');
 var stateEnum = require('./state-enum');
@@ -534,6 +566,7 @@ var keyStrokedInputTypes = constants.keyStrokedInputTypes;
  * @param {HTMLElement} el the DOM object to wrap. For radios and checkboxes, pass only 1 element- the class will find it's siblings with the same name attribute.
  * @param {_internal.validatorsNameOptionsTuple[]} validatorsNameOptionsTuples <b> the order matters- the input's state is the first {@link _internal.validatorsNameOptionsTuple validatorsNameOptionsTuple} that evulates to a non-valid (pending or invalid) state. </b>
  * @param {function} [onInputValidationResult] Signature of {@link _internal.onInputValidationResult onInputValidationResult}. A function to handle an input state or message change. If not passed, {@link _internal.defaultOnInputValidationResult defaultOnInputValidationResult} will be used.
+ * @param {boolean} isBlurOnly if true, doesn't not trigger validation on 'input' or 'change' events.
  */
 function Input(el, validatorsNameOptionsTuples, onInputValidationResult, isBlurOnly){
 
@@ -714,6 +747,11 @@ Input.prototype = (function() {
         this.validationCycle++;
         this.reBindCheckedElement();
 
+        if(typeof this.group.onBeforeValidation === 'function'){
+            this.group.onBeforeValidation(this.el);
+        }
+
+
         var validationsResult, validatorName;
 
         var i = fromIndex || 0;
@@ -739,6 +777,11 @@ Input.prototype = (function() {
 
         // new...
         this.isChanged = false; // TODO: move to top of function
+
+        if(typeof this.group.onAfterValidation === 'function'){
+            this.group.onAfterValidation(this.el);
+        }
+
     }
 
     // private
