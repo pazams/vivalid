@@ -346,11 +346,10 @@ describe('Group reset', function() {
 
         Name.value = "John Doe";
         Name.dispatchEvent(blurEvent);
-
-        Name.value = "John";
+        Name.value = "John Doe2";
         Name.dispatchEvent(inputEvent);
 
-        resetGroup('group name');
+        resetGroup('FirstGroup');
 
     }
 

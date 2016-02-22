@@ -136,6 +136,7 @@ var constants = require('./constants');
 var validInputTagNames = constants.validInputTagNames;
 
 var callbacks = {}; // custom user defined callbacks
+var groupNameToVivalidGroup = {};
 
 /**
  * Adds functional parameters, to be referenced at html data attributes.
@@ -168,7 +169,8 @@ function initGroup(groupElem){
             return $$.hasDataSet(el,'vivalidTuples');
         });
 
-        createGroupFromDataAttribtues(groupElem,inputElems);
+        var vivalidGroup = createGroupFromDataAttribtues(groupElem,inputElems);
+        addToGroupNameDictionairy(groupElem, vivalidGroup);
 
     }
 }
@@ -200,7 +202,8 @@ function initAll() {
         });
 
         for (var groupId in groupIdToInputs){
-            createGroupFromDataAttribtues(groupIdToGroup[groupId], groupIdToInputs[groupId]);
+            var vivalidGroup = createGroupFromDataAttribtues(groupIdToGroup[groupId], groupIdToInputs[groupId]);
+            addToGroupNameDictionairy(groupIdToGroup[groupId],vivalidGroup);
         }
 
 
@@ -224,9 +227,37 @@ function initAll() {
 
 }
 
+
+/**
+ * Allow's an application to reset the validations state and event listeners of a group
+ * @memberof! vivalid.htmlInterface
+ * @function
+ * @example vivalid.htmlInterface.resetGroup('contactGroup');
+ * @param {string} groupName
+ */
+function resetGroup(groupName){
+
+    var vivalidGroup = groupNameToVivalidGroup[groupName];
+
+    if(vivalidGroup){
+        vivalidGroup.reset();
+    }
+    else{
+        console.log('could not find group named '+ groupName);
+    }
+
+}
+
+
 /**
  * @private
  */
+
+function addToGroupNameDictionairy(groupElem,vivalidGroup){
+    groupName = $$.getDataSet(groupElem,'vivalidGroup');
+    groupNameToVivalidGroup[groupName] = vivalidGroup;
+}
+
 function createGroupFromDataAttribtues(groupElem,inputElems){
     var inputs = inputElems.map(vivalidInputFromElem);
 
@@ -263,7 +294,7 @@ function createGroupFromDataAttribtues(groupElem,inputElems){
         onAfterValidation = $$.getDataSet(groupElem,'vivalidAfterValidation');
     }
 
-    new InputGroup(inputs,
+    return new InputGroup(inputs,
                    $$.getChildrenByAttribute(groupElem,'vivalidSubmit'),
                    callbacks[onValidation[0]],
                    callbacks[onValidation[1]],
@@ -300,7 +331,8 @@ function vivalidInputFromElem(el){
 module.exports = {
     addCallback: addCallback,
     initAll: initAll,
-    initGroup: initGroup
+    initGroup: initGroup,
+    resetGroup: resetGroup
 };
 
 },{"./constants":1,"./dom-helpers":2,"./input":5,"./input-group":4}],4:[function(require,module,exports){
@@ -404,6 +436,7 @@ InputGroup.prototype = (function(){
         triggerInputsValidation: triggerInputsValidation,
         updateGroupListeners: updateGroupListeners,
         updateGroupStates: updateGroupStates,
+        reset: reset
     };
 
     function isValid(){
@@ -490,6 +523,15 @@ InputGroup.prototype = (function(){
         },this);
     }
 
+    function reset(){
+
+        InputGroup.call(this,this.inputs,this.submitElems,this.onValidationSuccess,this.onValidationFailure,this.pendingUiStart,this.pendingUiStop, this.groupStatesChanged, this.groupPendingChanged, this.onBeforeValidation, this.onAfterValidation);
+
+        this.inputs.forEach(function(input){
+            input.reset();
+        });
+    }
+
 })();
 
 module.exports = InputGroup;
@@ -574,12 +616,12 @@ function Input(el, validatorsNameOptionsTuples, onInputValidationResult, isBlurO
         throw 'only operates on the following html tags: ' + validInputTagNames.toString();
     }
 
-    this.group = {};
-
     this.el = el;
-    this.validators = buildValidators();
+    this.validatorsNameOptionsTuples = validatorsNameOptionsTuples;
     this.onInputValidationResult = onInputValidationResult || defaultOnInputValidationResult;
     this.isBlurOnly = isBlurOnly;
+
+    this.validators = buildValidators();
     this.isNoneChecked = false;
 
     this.validationState = new ValidationState('', stateEnum.valid);
@@ -690,7 +732,8 @@ Input.prototype = (function() {
         addEventType: addEventType,
         removeActiveEventType: removeActiveEventType,
         getUpdateInputValidationResultAsync: getUpdateInputValidationResultAsync,
-        updateInputValidationResult: updateInputValidationResult
+        updateInputValidationResult: updateInputValidationResult,
+        reset: reset
     };
 
     // public
@@ -782,6 +825,11 @@ Input.prototype = (function() {
             this.group.onAfterValidation(this.el);
         }
 
+    }
+
+    function reset(){
+        Input.call(this,this.el, this.validatorsNameOptionsTuples, this.onInputValidationResult, this.isBlurOnly);
+        this.onInputValidationResult(this.el,stateEnum.valid,'',stateEnum); // called with valid state to clear any previous errors UI
     }
 
     // private
