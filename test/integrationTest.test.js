@@ -38,6 +38,7 @@ describe('validations', function() {
     var addCallback = vivalid.htmlInterface.addCallback;
     var initAll = vivalid.htmlInterface.initAll;
     var initGroup = vivalid.htmlInterface.initGroup;
+    var resetGroup = vivalid.htmlInterface.resetGroup;
     var ERROR = vivalid._ERROR;
 
     before(function() {
@@ -316,6 +317,88 @@ describe('Blur-only inputs', function() {
     });
 
 });
+
+
+describe('Group reset', function() {
+
+    // inject the HTML fixture for the tests
+    beforeEach(function() {
+        // Why this line? See: https://github.com/billtrik/karma-fixture/issues/3
+        fixture.base = 'test';
+        fixture.load('integrationTest.fixture.html');
+
+        selectFormElements(1);
+        initGroup(Form);
+
+        interactAndReset();
+
+    });
+
+
+    // remove the html fixture from the DOM
+    afterEach(function() {
+        fixture.cleanup();
+    });
+
+    function interactAndReset(){
+
+        Name.dispatchEvent(clickEvent);
+
+        Name.value = "John Doe";
+        Name.dispatchEvent(blurEvent);
+
+        Name.value = "John";
+        Name.dispatchEvent(inputEvent);
+
+        resetGroup('group name');
+
+    }
+
+
+    // UX/UI
+
+    it('after error displayed and reset- should not display any errors before interacting with the inputs', function() {
+        expect(!isErrorDisplayed(Name) && !isErrorDisplayed(Email)).to.be.ok;
+    });
+
+    it('after error displayed and reset- should display all invalid errors after submitting, even without interacting with the inputs', function() {
+        SendButton.click();
+        expect(isErrorDisplayed(Name) && isErrorDisplayed(Email)).to.be.ok;
+    });
+
+    it('after error displayed and reset- should not display an error before first blur (focus out)', function() {
+
+        Name.dispatchEvent(clickEvent);
+        Name.value = "John Doe";
+
+        expect(!isErrorDisplayed(Name)).to.be.ok;
+    });
+
+    it('after error displayed and reset- should display an error after first blur (focus out)', function() {
+
+        Name.dispatchEvent(clickEvent);
+
+        Name.value = "John Doe";
+        Name.dispatchEvent(blurEvent);
+
+        expect(isErrorDisplayed(Name)).to.be.ok;
+    });
+
+    it('after error displayed and reset- should respond to fixes as they are typed, after first blur (focus out)', function() {
+
+        Name.dispatchEvent(clickEvent);
+
+        Name.value = "John Doe";
+        Name.dispatchEvent(blurEvent);
+
+        Name.value = "John";
+        Name.dispatchEvent(inputEvent);
+
+        expect(!isErrorDisplayed(Name)).to.be.ok;
+    });
+
+});
+
 
 
 });
