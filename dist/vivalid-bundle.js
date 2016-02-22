@@ -2,7 +2,7 @@
 module.exports = {
     VERSION: '0.1.0',
     DEBUG: false,
-    validInputTagNames: ['input', 'textarea', 'select'],
+    validInputTagNames: ['input', 'textarea', 'select', 'hidden'],
     keyStrokedInputTypes: ['text', 'email', 'password', 'search'],
     ERROR: {
         mandatorySuccessFailure: 'passing callbacks for onValidationSuccess and onValidationFailure is mandatory'
@@ -87,6 +87,30 @@ function toDashed(name) {
     });
 }
 
+// from http://jaketrent.com/post/addremove-classes-raw-javascript/
+// used instead of classList because of lacking browser support
+function hasClass(el, className) {
+  if (el.classList)
+    return el.classList.contains(className)
+  else
+    return !!el.className.match(new RegExp('(\\s|^)' + className + '(\\s|$)'))
+}
+
+function addClass(el, className) {
+  if (el.classList)
+    el.classList.add(className)
+  else if (!hasClass(el, className)) el.className += " " + className
+}
+
+function removeClass(el, className) {
+  if (el.classList)
+    el.classList.remove(className)
+  else if (hasClass(el, className)) {
+    var reg = new RegExp('(\\s|^)' + className + '(\\s|$)')
+    el.className=el.className.replace(reg, ' ')
+  }
+}
+
 
 
 module.exports = {
@@ -96,7 +120,9 @@ module.exports = {
     getClosestParentByAttribute: getClosestParentByAttribute,
     getChildrenByAttribute: getChildrenByAttribute,
     ready: ready,
-    toArray: toArray
+    toArray: toArray,
+    addClass: addClass,
+    removeClass: removeClass
 };
 
 
@@ -110,6 +136,7 @@ var constants = require('./constants');
 var validInputTagNames = constants.validInputTagNames;
 
 var callbacks = {}; // custom user defined callbacks
+var groupNameToVivalidGroup = {};
 
 /**
  * Adds functional parameters, to be referenced at html data attributes.
@@ -142,7 +169,8 @@ function initGroup(groupElem){
             return $$.hasDataSet(el,'vivalidTuples');
         });
 
-        createGroupFromDataAttribtues(groupElem,inputElems);
+        var vivalidGroup = createGroupFromDataAttribtues(groupElem,inputElems);
+        addToGroupNameDictionairy(groupElem, vivalidGroup);
 
     }
 }
@@ -174,7 +202,8 @@ function initAll() {
         });
 
         for (var groupId in groupIdToInputs){
-            createGroupFromDataAttribtues(groupIdToGroup[groupId], groupIdToInputs[groupId]);
+            var vivalidGroup = createGroupFromDataAttribtues(groupIdToGroup[groupId], groupIdToInputs[groupId]);
+            addToGroupNameDictionairy(groupIdToGroup[groupId],vivalidGroup);
         }
 
 
@@ -198,9 +227,37 @@ function initAll() {
 
 }
 
+
+/**
+ * Allow's an application to reset the validations state and event listeners of a group
+ * @memberof! vivalid.htmlInterface
+ * @function
+ * @example vivalid.htmlInterface.resetGroup('contactGroup');
+ * @param {string} groupName
+ */
+function resetGroup(groupName){
+
+    var vivalidGroup = groupNameToVivalidGroup[groupName];
+
+    if(vivalidGroup){
+        vivalidGroup.reset();
+    }
+    else{
+        console.log('could not find group named '+ groupName);
+    }
+
+}
+
+
 /**
  * @private
  */
+
+function addToGroupNameDictionairy(groupElem,vivalidGroup){
+    groupName = $$.getDataSet(groupElem,'vivalidGroup');
+    groupNameToVivalidGroup[groupName] = vivalidGroup;
+}
+
 function createGroupFromDataAttribtues(groupElem,inputElems){
     var inputs = inputElems.map(vivalidInputFromElem);
 
@@ -208,6 +265,8 @@ function createGroupFromDataAttribtues(groupElem,inputElems){
     var pendingUi = [null,null];
     var groupStatesChanged;
     var groupPendingChanged;
+    var onBeforeValidation;
+    var onAfterValidation;
 
     if ($$.hasDataSet(groupElem,'vivalidOnValidation')){
         onValidation = JSON.parse($$.getDataSet(groupElem,'vivalidOnValidation'));
@@ -227,14 +286,24 @@ function createGroupFromDataAttribtues(groupElem,inputElems){
         groupPendingChanged = $$.getDataSet(groupElem,'vivalidPendingChanged');
     }
 
-    new InputGroup(inputs,
+   if ($$.hasDataSet(groupElem,'vivalidBeforeValidation')){
+        onBeforeValidation = $$.getDataSet(groupElem,'vivalidBeforeValidation');
+    }
+
+   if ($$.hasDataSet(groupElem,'vivalidAfterValidation')){
+        onAfterValidation = $$.getDataSet(groupElem,'vivalidAfterValidation');
+    }
+
+    return new InputGroup(inputs,
                    $$.getChildrenByAttribute(groupElem,'vivalidSubmit'),
                    callbacks[onValidation[0]],
                    callbacks[onValidation[1]],
                    callbacks[pendingUi[0]],
                    callbacks[pendingUi[1]],
                    groupStatesChanged,
-                   groupPendingChanged);
+                   groupPendingChanged,
+                   callbacks[onBeforeValidation],
+                   callbacks[onAfterValidation]);
 }
 
 
@@ -248,7 +317,9 @@ function vivalidInputFromElem(el){
         onInputValidationResult = $$.getDataSet(el,'vivalidResult');
     }
 
-    return new Input(el,tuplesArray,callbacks[onInputValidationResult]);
+    var isBlurOnly = $$.hasDataSet(el,'vivalidBlurOnly');
+
+    return new Input(el,tuplesArray,callbacks[onInputValidationResult],isBlurOnly);
 }
 
 
@@ -260,7 +331,8 @@ function vivalidInputFromElem(el){
 module.exports = {
     addCallback: addCallback,
     initAll: initAll,
-    initGroup: initGroup
+    initGroup: initGroup,
+    resetGroup: resetGroup
 };
 
 },{"./constants":1,"./dom-helpers":2,"./input":5,"./input-group":4}],4:[function(require,module,exports){
@@ -281,8 +353,11 @@ var ERROR = require('./constants').ERROR;
  * @param {function} [pendingUiStop] signature of {@link _internal.pendingUiStop pendingUiStop}. highly recommneded when using asyc client-server validations. A function called when leaving a group pending state after a submitElem is clicked. Use this function to undo the UX effects taken inside pendingUiStart.
  * @param {function} [groupStatesChanged]
  * @param {function} [groupPendingChanged]
+ * @param {function} [onBeforeValidation] Signature of {@link _internal.onBeforeValidation onBeforeValidation}. A function to be called before triggering any of the input's validators
+ * @param {function} [onAfterValidation] Signature of {@link _internal.onAfterValidation onAfterValidation}. A function to be called after triggering all of the input's validators
+
  */
-function InputGroup(inputsArray,submitElems,onValidationSuccess,onValidationFailure,pendingUiStart,pendingUiStop, groupStatesChanged, groupPendingChanged){
+function InputGroup(inputsArray,submitElems,onValidationSuccess,onValidationFailure,pendingUiStart,pendingUiStop, groupStatesChanged, groupPendingChanged, onBeforeValidation, onAfterValidation){
 
     if(!onValidationSuccess || !onValidationFailure) throw ERROR.mandatorySuccessFailure;
 
@@ -296,6 +371,9 @@ function InputGroup(inputsArray,submitElems,onValidationSuccess,onValidationFail
     this.pendingUiStart = pendingUiStart;
     this.pendingUiStop = pendingUiStop;
     this.groupStatesChanged = groupStatesChanged;
+    this.onBeforeValidation = onBeforeValidation;
+    this.onAfterValidation = onAfterValidation;
+
 
     this.groupPendingChangedListeners = [];
     this.groupPendingChangedListeners.push(
@@ -358,6 +436,7 @@ InputGroup.prototype = (function(){
         triggerInputsValidation: triggerInputsValidation,
         updateGroupListeners: updateGroupListeners,
         updateGroupStates: updateGroupStates,
+        reset: reset
     };
 
     function isValid(){
@@ -444,6 +523,15 @@ InputGroup.prototype = (function(){
         },this);
     }
 
+    function reset(){
+
+        InputGroup.call(this,this.inputs,this.submitElems,this.onValidationSuccess,this.onValidationFailure,this.pendingUiStart,this.pendingUiStop, this.groupStatesChanged, this.groupPendingChanged, this.onBeforeValidation, this.onAfterValidation);
+
+        this.inputs.forEach(function(input){
+            input.reset();
+        });
+    }
+
 })();
 
 module.exports = InputGroup;
@@ -488,11 +576,26 @@ module.exports = InputGroup;
  *  @param {HTMLElement[]} submitElems the group's submit elements
  */
 
+/** A function to be called before triggering any of the input's validators
+ *  @name onBeforeValidation
+ *  @function
+ *  @memberof! _internal
+ *  @param {HTMLElement} el the input's DOM object.
+ */
+
+/** A function to be called after triggering all of the input's validators
+ *  @name onAfterValidation
+ *  @function
+ *  @memberof! _internal
+ *  @param {HTMLElement} el the input's DOM object.
+ */
+
 },{"./constants":1,"./input":5,"./state-enum":6}],5:[function(require,module,exports){
 var validatorRepo = require('./validator-repo');
 var stateEnum = require('./state-enum');
 var ValidationState = require('./validation-state');
 var constants = require('./constants');
+var $$ = require('./dom-helpers');
 
 var validInputTagNames = constants.validInputTagNames;
 var keyStrokedInputTypes = constants.keyStrokedInputTypes;
@@ -505,18 +608,20 @@ var keyStrokedInputTypes = constants.keyStrokedInputTypes;
  * @param {HTMLElement} el the DOM object to wrap. For radios and checkboxes, pass only 1 element- the class will find it's siblings with the same name attribute.
  * @param {_internal.validatorsNameOptionsTuple[]} validatorsNameOptionsTuples <b> the order matters- the input's state is the first {@link _internal.validatorsNameOptionsTuple validatorsNameOptionsTuple} that evulates to a non-valid (pending or invalid) state. </b>
  * @param {function} [onInputValidationResult] Signature of {@link _internal.onInputValidationResult onInputValidationResult}. A function to handle an input state or message change. If not passed, {@link _internal.defaultOnInputValidationResult defaultOnInputValidationResult} will be used.
+ * @param {boolean} isBlurOnly if true, doesn't not trigger validation on 'input' or 'change' events.
  */
-function Input(el, validatorsNameOptionsTuples, onInputValidationResult){
+function Input(el, validatorsNameOptionsTuples, onInputValidationResult, isBlurOnly){
 
     if (validInputTagNames.indexOf(el.nodeName.toLowerCase()) === -1){
         throw 'only operates on the following html tags: ' + validInputTagNames.toString();
     }
 
-    this.group = {};
-
     this.el = el;
-    this.validators = buildValidators();
+    this.validatorsNameOptionsTuples = validatorsNameOptionsTuples;
     this.onInputValidationResult = onInputValidationResult || defaultOnInputValidationResult;
+    this.isBlurOnly = isBlurOnly;
+
+    this.validators = buildValidators();
     this.isNoneChecked = false;
 
     this.validationState = new ValidationState('', stateEnum.valid);
@@ -581,6 +686,7 @@ function Input(el, validatorsNameOptionsTuples, onInputValidationResult){
 
             el.style.borderStyle = "solid";
             el.style.borderColor = "#ff0000";
+            $$.addClass(el,"vivalid-error-input");
         }
 
         else {
@@ -589,6 +695,7 @@ function Input(el, validatorsNameOptionsTuples, onInputValidationResult){
                 errorDiv.parentNode.removeChild(errorDiv);
                 el.style.borderStyle = "";
                 el.style.borderColor = "";
+                $$.removeClass(el,"vivalid-error-input");
             }
         }
 
@@ -625,7 +732,8 @@ Input.prototype = (function() {
         addEventType: addEventType,
         removeActiveEventType: removeActiveEventType,
         getUpdateInputValidationResultAsync: getUpdateInputValidationResultAsync,
-        updateInputValidationResult: updateInputValidationResult
+        updateInputValidationResult: updateInputValidationResult,
+        reset: reset
     };
 
     // public
@@ -682,6 +790,11 @@ Input.prototype = (function() {
         this.validationCycle++;
         this.reBindCheckedElement();
 
+        if(typeof this.group.onBeforeValidation === 'function'){
+            this.group.onBeforeValidation(this.el);
+        }
+
+
         var validationsResult, validatorName;
 
         var i = fromIndex || 0;
@@ -694,7 +807,9 @@ Input.prototype = (function() {
                 {
                     validationsResult = validatorResult;
                     validatorName = validator.name;
-                    this.changeEventType('input'); //TODO: call only once?
+                    if(!this.isBlurOnly) {
+                        this.changeEventType('input'); //TODO: call only once?
+                    }
                     break;
                 }
 
@@ -705,13 +820,28 @@ Input.prototype = (function() {
 
         // new...
         this.isChanged = false; // TODO: move to top of function
+
+        if(typeof this.group.onAfterValidation === 'function'){
+            this.group.onAfterValidation(this.el);
+        }
+
+    }
+
+    function reset(){
+        Input.call(this,this.el, this.validatorsNameOptionsTuples, this.onInputValidationResult, this.isBlurOnly);
+        this.onInputValidationResult(this.el,stateEnum.valid,'',stateEnum); // called with valid state to clear any previous errors UI
     }
 
     // private
 
     function addChangeListener(){
         if (this.isKeyed){
-            this.el.addEventListener('input', function () { this.isChanged = true;}, false);
+            if(this.isBlurOnly){
+                return;
+            }
+            else{
+                this.el.addEventListener('input', function () { this.isChanged = true;}, false);
+            }
         }
 
         else if (this.elName === 'input' && (this.elType === 'radio' || this.elType === 'checkbox')){
@@ -809,7 +939,7 @@ module.exports = Input;
  *  @param {object} stateEnum {@link _internal.stateEnum stateEnum}
  */
 
-},{"./constants":1,"./state-enum":6,"./validation-state":7,"./validator-repo":8}],6:[function(require,module,exports){
+},{"./constants":1,"./dom-helpers":2,"./state-enum":6,"./validation-state":7,"./validator-repo":8}],6:[function(require,module,exports){
 /**
  * An Enum with 3 states: invalid , pending , valid .
  * @memberof! _internal
