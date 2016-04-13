@@ -335,7 +335,7 @@ module.exports = {
     resetGroup: resetGroup
 };
 
-},{"./constants":1,"./dom-helpers":2,"./input":5,"./input-group":4}],4:[function(require,module,exports){
+},{"./constants":1,"./dom-helpers":2,"./input":6,"./input-group":4}],4:[function(require,module,exports){
 var Input = require('./input');
 var stateEnum = require('./state-enum');
 var DEBUG = require('./constants').DEBUG;
@@ -525,8 +525,6 @@ InputGroup.prototype = (function(){
 
     function reset(){
 
-        InputGroup.call(this,this.inputs,this.submitElems,this.onValidationSuccess,this.onValidationFailure,this.pendingUiStart,this.pendingUiStop, this.groupStatesChanged, this.groupPendingChanged, this.onBeforeValidation, this.onAfterValidation);
-
         this.inputs.forEach(function(input){
             input.reset();
         });
@@ -590,10 +588,26 @@ module.exports = InputGroup;
  *  @param {HTMLElement} el the input's DOM object.
  */
 
-},{"./constants":1,"./input":5,"./state-enum":6}],5:[function(require,module,exports){
+},{"./constants":1,"./input":6,"./state-enum":7}],5:[function(require,module,exports){
+var ValidationState = require('./validation-state');
+var stateEnum = require('./state-enum');
+
+function InputState(){
+
+    this.isNoneChecked = false;
+    this.validationState = new ValidationState('', stateEnum.valid);
+    this.validationCycle = 0;
+    this.isChanged = false;
+    this.activeEventType = '';
+}
+
+module.exports = InputState;
+
+},{"./state-enum":7,"./validation-state":8}],6:[function(require,module,exports){
 var validatorRepo = require('./validator-repo');
 var stateEnum = require('./state-enum');
 var ValidationState = require('./validation-state');
+var InputState = require('./input-state');
 var constants = require('./constants');
 var $$ = require('./dom-helpers');
 
@@ -622,17 +636,13 @@ function Input(el, validatorsNameOptionsTuples, onInputValidationResult, isBlurO
     this.isBlurOnly = isBlurOnly;
 
     this.validators = buildValidators();
-    this.isNoneChecked = false;
 
-    this.validationState = new ValidationState('', stateEnum.valid);
-    this.validationCycle = 0;
-    this.isChanged = false;
+    this.inputState = new InputState();
 
     this.elName = el.nodeName.toLowerCase();
     this.elType = el.type;
     this.isKeyed = (this.elName === 'textarea' || keyStrokedInputTypes.indexOf(this.elType) > -1);
 
-    this.activeEventType = '';
 
     this._runValidatorsBounded = this.runValidators.bind(this);
 
@@ -748,23 +758,23 @@ Input.prototype = (function() {
         var checkedElement = document.querySelector('input[name="'+this.el.name+'"]:checked');
         if (checkedElement){
             this.el = checkedElement;
-            this.isNoneChecked  = false;
+            this.inputState.isNoneChecked  = false;
         }
         else{
-            this.isNoneChecked  = true;
+            this.inputState.isNoneChecked  = true;
         }
 
     }
 
     function triggerValidation(){
-        if (this.validationCycle === 0 || this.isChanged) {
+        if (this.inputState.validationCycle === 0 || this.inputState.isChanged) {
             this._runValidatorsBounded();
         }
     }
 
     function changeEventType(eventType) {
         if (!this.isKeyed) return;
-        if (eventType === this.activeEventType) return;
+        if (eventType === this.inputState.activeEventType) return;
         this.removeActiveEventType();
         this.addEventType(eventType);
     }
@@ -787,7 +797,7 @@ Input.prototype = (function() {
 
     function runValidators(event, fromIndex){
 
-        this.validationCycle++;
+        this.inputState.validationCycle++;
         this.reBindCheckedElement();
 
         if(typeof this.group.onBeforeValidation === 'function'){
@@ -800,9 +810,9 @@ Input.prototype = (function() {
         var i = fromIndex || 0;
         for (; i < this.validators.length; i++){
             var validator = this.validators[i];
-            var elementValue = this.isNoneChecked ? '' : this.el.value;
+            var elementValue = this.inputState.isNoneChecked ? '' : this.el.value;
             // if async, then return a pending enum with empty message and call the callback with result once ready
-            var validatorResult = validator.run(elementValue, this.getUpdateInputValidationResultAsync(validator.name, i, this.validationCycle));
+            var validatorResult = validator.run(elementValue, this.getUpdateInputValidationResultAsync(validator.name, i, this.inputState.validationCycle));
             if (validatorResult.stateEnum !== stateEnum.valid)
                 {
                     validationsResult = validatorResult;
@@ -819,7 +829,7 @@ Input.prototype = (function() {
         this.updateInputValidationResult(validationsResult,validatorName);
 
         // new...
-        this.isChanged = false; // TODO: move to top of function
+        this.inputState.isChanged = false; // TODO: move to top of function
 
         if(typeof this.group.onAfterValidation === 'function'){
             this.group.onAfterValidation(this.el);
@@ -828,19 +838,24 @@ Input.prototype = (function() {
     }
 
     function reset(){
-        Input.call(this,this.el, this.validatorsNameOptionsTuples, this.onInputValidationResult, this.isBlurOnly);
+        this.removeActiveEventType();
+        this.initListeners();
+        this.inputState = new InputState();
         this.onInputValidationResult(this.el,stateEnum.valid,'',stateEnum); // called with valid state to clear any previous errors UI
     }
 
     // private
 
     function addChangeListener(){
+
+        var self = this;
+
         if (this.isKeyed){
             if(this.isBlurOnly){
                 return;
             }
             else{
-                this.el.addEventListener('input', function () { this.isChanged = true;}, false);
+                this.el.addEventListener('input', function () { self.inputState.isChanged = true;}, false);
             }
         }
 
@@ -850,12 +865,12 @@ Input.prototype = (function() {
 
             var i=0;
             for (; i <groupElements.length ; i++) {
-                groupElements[i].addEventListener('change', function (){this.isChanged = true;}, false);
+                groupElements[i].addEventListener('change', function (){self.inputState.isChanged = true;}, false);
             }
         }
 
         else if(this.elName === 'select'){
-            this.el.addEventListener('change', function (){this.isChanged = true;}, false);
+            this.el.addEventListener('change', function (){self.inputState.isChanged = true;}, false);
         }
     }
 
@@ -878,11 +893,11 @@ Input.prototype = (function() {
             this.el.addEventListener(eventType, this._runValidatorsBounded, false);
         }
 
-        this.activeEventType = eventType;
+        this.inputState.activeEventType = eventType;
     }
 
     function removeActiveEventType() {
-        this.el.removeEventListener(this.activeEventType, this._runValidatorsBounded, false);
+        this.el.removeEventListener(this.inputState.activeEventType, this._runValidatorsBounded, false);
     }
 
     function getUpdateInputValidationResultAsync(validatorName, validatorIndex, asyncValidationCycle) {
@@ -892,7 +907,7 @@ Input.prototype = (function() {
         return function(validatorResult){
 
             // guard against updating async validations from old cycles
-            if(asyncValidationCycle && asyncValidationCycle !== self.validationCycle){
+            if(asyncValidationCycle && asyncValidationCycle !== self.inputState.validationCycle){
                 return;
             }
 
@@ -910,10 +925,10 @@ Input.prototype = (function() {
 
     function updateInputValidationResult(validationsResult,validatorName) {
 
-        this.group.updateGroupStates(this.validationState, validationsResult); // filter equal state at caller
+        this.group.updateGroupStates(this.inputState.validationState, validationsResult); // filter equal state at caller
         this.group.updateGroupListeners();
 
-        this.validationState = validationsResult;
+        this.inputState.validationState = validationsResult;
         this.onInputValidationResult(this.el,validationsResult,validatorName,stateEnum);
 
     }
@@ -939,7 +954,7 @@ module.exports = Input;
  *  @param {object} stateEnum {@link _internal.stateEnum stateEnum}
  */
 
-},{"./constants":1,"./dom-helpers":2,"./state-enum":6,"./validation-state":7,"./validator-repo":8}],6:[function(require,module,exports){
+},{"./constants":1,"./dom-helpers":2,"./input-state":5,"./state-enum":7,"./validation-state":8,"./validator-repo":9}],7:[function(require,module,exports){
 /**
  * An Enum with 3 states: invalid , pending , valid .
  * @memberof! _internal
@@ -954,7 +969,7 @@ var stateEnum = {
 
 module.exports = stateEnum;
 
-},{}],7:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 /**
  * {constructor} creates a new ValidationState object with a validation message and state.
  * @memberof! _internal
@@ -974,7 +989,7 @@ module.exports = ValidationState;
  * @namespace _internal
  */
 
-},{}],8:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 var stateEnum = require('./state-enum');
 var ValidationState = require('./validation-state');
 
@@ -1020,7 +1035,7 @@ module.exports = {
     build: build
 };
 
-},{"./state-enum":6,"./validation-state":7}],"vivalid":[function(require,module,exports){
+},{"./state-enum":7,"./validation-state":8}],"vivalid":[function(require,module,exports){
 'use strict';
 
 var Input = require('./input');
@@ -1042,5 +1057,5 @@ module.exports = {
     _ERROR: constants.ERROR
 };
 
-},{"./constants":1,"./html-interface":3,"./input":5,"./input-group":4,"./state-enum":6,"./validator-repo":8}]},{},["vivalid"]))("vivalid")
+},{"./constants":1,"./html-interface":3,"./input":6,"./input-group":4,"./state-enum":7,"./validator-repo":9}]},{},["vivalid"]))("vivalid")
 });
