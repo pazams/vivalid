@@ -24,8 +24,8 @@ see [here](http://pazams.github.io/vivalid/documentation/vivalid.Input.html)
 ## Installation
 
 ### Manual:
-* save and include: https://cdn.raw.githubusercontent.com/pazams/vivalid/master/dist/vivalid-bundle.min.js
-* (optional) https://cdn.raw.githubusercontent.com/pazams/vivalid-rules-core/master/dist/vivalid-rules-core-bundle.min.js
+* save and include: https://cdn.rawgit.com/pazams/vivalid/master/dist/vivalid-bundle.min.js
+* (optional) https://cdn.rawgit.com/pazams/vivalid-rules-core/master/dist/vivalid-rules-core-bundle.min.js
 
 ### npm:
 * `npm install vivalid`
