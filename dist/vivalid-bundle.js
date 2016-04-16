@@ -682,8 +682,8 @@ function Input(el, validatorsNameOptionsTuples, onInputValidationResult, isBlurO
             errorDiv = getExistingErrorDiv(el);
             if (errorDiv) {
                 errorDiv.parentNode.removeChild(errorDiv);
-                el.style.borderStyle = null;
-                el.style.borderColor = null;
+                el.style.borderStyle = "";
+                el.style.borderColor = "";
                 $$.removeClass(el, "vivalid-error-input");
             }
         }
@@ -923,6 +923,7 @@ module.exports = Input;
  *  @param {string} validatorName The name of validator that triggered an 'invalid' state.
  *  @param {object} stateEnum {@link _internal.stateEnum stateEnum}
  */
+
 },{"./constants":1,"./dom-helpers":2,"./input-state":5,"./state-enum":7,"./validation-state":8,"./validator-repo":9}],7:[function(require,module,exports){
 /**
  * An Enum with 3 states: invalid , pending , valid .
@@ -1007,7 +1008,6 @@ module.exports = {
 var Input = require('./input');
 var InputGroup = require('./input-group');
 var validatorRepo = require('./validator-repo');
-var stateEnum = require('./state-enum');
 var htmlInterface = require('./html-interface');
 var constants = require('./constants');
 
@@ -1022,5 +1022,6 @@ module.exports = {
     htmlInterface: htmlInterface,
     _ERROR: constants.ERROR
 };
-},{"./constants":1,"./html-interface":3,"./input":6,"./input-group":4,"./state-enum":7,"./validator-repo":9}]},{},["vivalid"]))("vivalid")
+
+},{"./constants":1,"./html-interface":3,"./input":6,"./input-group":4,"./validator-repo":9}]},{},["vivalid"]))("vivalid")
 });
