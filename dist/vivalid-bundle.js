@@ -516,6 +516,8 @@ InputGroup.prototype = (function() {
         this.inputs.forEach(function(input) {
             input.reset();
         });
+
+        this.stateCounters[stateEnum.valid] = this.inputs.length;
     }
 
 })();
