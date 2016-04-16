@@ -12,7 +12,7 @@ Some constraints, such as "existing user" or "valid location", need to be valida
 Sync rules return with `stateEnum.invalid` or `stateEnum.valid`  
 Asyc rules return with `stateEnum.pending`, and also call a callback with `stateEnum.invalid` or `stateEnum.valid` when ready.
 ### Full UI control 
-Either edit the UI through a CSS rule for `.vivalid-error` , or gain complete control by passing a [callback](http://pazams.github.io/vivalid/documentation/-_internal.html#..onInputValidationResult) that will be called with a DOM element, validation message, and validation state.
+Either edit the UI through a CSS rule for `.vivalid-error` and `.vivalid-error-input` classes , or gain complete control by passing a [callback](http://pazams.github.io/vivalid/documentation/-_internal.html#..onInputValidationResult) that will be called with a DOM element, validation message, and validation state.
 ### Data attributes interface
 Use this library with full javascript interface, or the data attributes html interface (with js to only define callbacks).
 ### Separation of validator rules
@@ -24,8 +24,8 @@ see [here](http://pazams.github.io/vivalid/documentation/vivalid.Input.html)
 ## Installation
 
 ### Manual:
-* save and include: https://raw.githubusercontent.com/pazams/vivalid/master/dist/vivalid-bundle.min.js
-* (optional) https://raw.githubusercontent.com/pazams/vivalid-rules-core/master/dist/vivalid-rules-core-bundle.min.js
+* save and include: https://cdn.rawgit.com/pazams/vivalid/master/dist/vivalid-bundle.min.js
+* (optional) https://cdn.rawgit.com/pazams/vivalid-rules-core/master/dist/vivalid-rules-core-bundle.min.js
 
 ### npm:
 * `npm install vivalid`
@@ -47,8 +47,8 @@ See js [documentation](http://pazams.github.io/vivalid/documentation/vivalid.htm
 <html>
 
 <head>
-  <script src="https://rawgit.com/pazams/vivalid/master/dist/vivalid-bundle.js"></script>
-  <script src="https://rawgit.com/pazams/vivalid-rules-core/master/dist/vivalid-rules-core-bundle.min.js"></script>
+  <script src="https://cdn.rawgit.com/pazams/vivalid/master/dist/vivalid-bundle.js"></script>
+  <script src="https://cdn.rawgit.com/pazams/vivalid-rules-core/master/dist/vivalid-rules-core-bundle.min.js"></script>
   <script src="script.js"></script>
 </head>
 
