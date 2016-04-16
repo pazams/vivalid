@@ -2,7 +2,7 @@
 
 describe('validations', function() {
 
-    var Name,Email,SendButton,Form;
+    var Name,Email,SendButton,ResetButton,Form;
 
     var clickEvent = new MouseEvent('click', {
         'view': window,
@@ -26,6 +26,7 @@ describe('validations', function() {
         Name = document.getElementById('Name'+formNumber);
         Email = document.getElementById('Email'+formNumber);
         SendButton = document.getElementById('SendButton'+formNumber);
+        ResetButton = document.getElementById('ResetButton'+formNumber);
         Form = document.getElementById('Form'+formNumber);
     }
 
@@ -321,80 +322,95 @@ describe('Blur-only inputs', function() {
 
 describe('Group reset', function() {
 
-    // inject the HTML fixture for the tests
-    beforeEach(function() {
-        // Why this line? See: https://github.com/billtrik/karma-fixture/issues/3
-        fixture.base = 'test';
-        fixture.load('integrationTest.fixture.html');
+    resetMode('groupName');
+    resetMode('button');
 
-        selectFormElements(1);
-        initGroup(Form);
+    function resetMode(mode){
 
-        interactAndReset();
+        // inject the HTML fixture for the tests
+        beforeEach(function() {
+            // Why this line? See: https://github.com/billtrik/karma-fixture/issues/3
+            fixture.base = 'test';
+            fixture.load('integrationTest.fixture.html');
 
-    });
+            selectFormElements(1);
+            initGroup(Form);
+
+            interactAndReset();
+
+        });
 
 
-    // remove the html fixture from the DOM
-    afterEach(function() {
-        fixture.cleanup();
-    });
+        // remove the html fixture from the DOM
+        afterEach(function() {
+            fixture.cleanup();
+        });
 
-    function interactAndReset(){
+        function interactAndReset(){
 
-        Name.dispatchEvent(clickEvent);
+            Name.dispatchEvent(clickEvent);
 
-        Name.value = "John Doe";
-        Name.dispatchEvent(blurEvent);
-        Name.value = "John Doe2";
-        Name.dispatchEvent(inputEvent);
+            Name.value = "John Doe";
+            Name.dispatchEvent(blurEvent);
+            Name.value = "John Doe2";
+            Name.dispatchEvent(inputEvent);
 
-        resetGroup('FirstGroup');
+            switch(mode){
+                case "groupName": 
+                    resetGroup('FirstGroup');
+                    break;
+
+                case "button":
+                    ResetButton.click();
+                    break;
+            }
+
+        }
+
+
+        // UX/UI
+
+        it('after error displayed and reset- should not display any errors before interacting with the inputs', function() {
+            expect(!isErrorDisplayed(Name) && !isErrorDisplayed(Email)).to.be.ok;
+        });
+
+        it('after error displayed and reset- should display all invalid errors after submitting, even without interacting with the inputs', function() {
+            SendButton.click();
+            expect(isErrorDisplayed(Name) && isErrorDisplayed(Email)).to.be.ok;
+        });
+
+        it('after error displayed and reset- should not display an error before first blur (focus out)', function() {
+
+            Name.dispatchEvent(clickEvent);
+            Name.value = "John Doe";
+
+            expect(!isErrorDisplayed(Name)).to.be.ok;
+        });
+
+        it('after error displayed and reset- should display an error after first blur (focus out)', function() {
+
+            Name.dispatchEvent(clickEvent);
+
+            Name.value = "John Doe";
+            Name.dispatchEvent(blurEvent);
+
+            expect(isErrorDisplayed(Name)).to.be.ok;
+        });
+
+        it('after error displayed and reset- should respond to fixes as they are typed, after first blur (focus out)', function() {
+
+            Name.dispatchEvent(clickEvent);
+
+            Name.value = "John Doe";
+            Name.dispatchEvent(blurEvent);
+
+            Name.value = "John";
+            Name.dispatchEvent(inputEvent);
+
+            expect(!isErrorDisplayed(Name)).to.be.ok;
+        });
 
     }
-
-
-    // UX/UI
-
-    it('after error displayed and reset- should not display any errors before interacting with the inputs', function() {
-        expect(!isErrorDisplayed(Name) && !isErrorDisplayed(Email)).to.be.ok;
-    });
-
-    it('after error displayed and reset- should display all invalid errors after submitting, even without interacting with the inputs', function() {
-        SendButton.click();
-        expect(isErrorDisplayed(Name) && isErrorDisplayed(Email)).to.be.ok;
-    });
-
-    it('after error displayed and reset- should not display an error before first blur (focus out)', function() {
-
-        Name.dispatchEvent(clickEvent);
-        Name.value = "John Doe";
-
-        expect(!isErrorDisplayed(Name)).to.be.ok;
-    });
-
-    it('after error displayed and reset- should display an error after first blur (focus out)', function() {
-
-        Name.dispatchEvent(clickEvent);
-
-        Name.value = "John Doe";
-        Name.dispatchEvent(blurEvent);
-
-        expect(isErrorDisplayed(Name)).to.be.ok;
-    });
-
-    it('after error displayed and reset- should respond to fixes as they are typed, after first blur (focus out)', function() {
-
-        Name.dispatchEvent(clickEvent);
-
-        Name.value = "John Doe";
-        Name.dispatchEvent(blurEvent);
-
-        Name.value = "John";
-        Name.dispatchEvent(inputEvent);
-
-        expect(!isErrorDisplayed(Name)).to.be.ok;
-    });
 
 });
 
