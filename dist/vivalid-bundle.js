@@ -517,6 +517,8 @@ InputGroup.prototype = (function() {
             input.reset();
         });
 
+        this.stateCounters[stateEnum.invalid] = 0;
+        this.stateCounters[stateEnum.pending] = 0;
         this.stateCounters[stateEnum.valid] = this.inputs.length;
     }
 
@@ -577,6 +579,7 @@ module.exports = InputGroup;
  *  @memberof! _internal
  *  @param {HTMLElement} el the input's DOM object.
  */
+
 },{"./constants":1,"./input":6,"./state-enum":7}],5:[function(require,module,exports){
 var ValidationState = require('./validation-state');
 var stateEnum = require('./state-enum');
