@@ -303,7 +303,9 @@ function createGroupFromDataAttribtues(groupElem,inputElems){
                    groupStatesChanged,
                    groupPendingChanged,
                    callbacks[onBeforeValidation],
-                   callbacks[onAfterValidation]);
+                   callbacks[onAfterValidation],
+                   $$.getChildrenByAttribute(groupElem,'vivalidReset')
+                         );
 }
 
 
@@ -355,9 +357,10 @@ var ERROR = require('./constants').ERROR;
  * @param {function} [groupPendingChanged]
  * @param {function} [onBeforeValidation] Signature of {@link _internal.onBeforeValidation onBeforeValidation}. A function to be called before triggering any of the input's validators
  * @param {function} [onAfterValidation] Signature of {@link _internal.onAfterValidation onAfterValidation}. A function to be called after triggering all of the input's validators
+ * @param {HTMLElement[]} [resetElems] an array of elements that should trigger the group's validation reset.
 
  */
-function InputGroup(inputsArray,submitElems,onValidationSuccess,onValidationFailure,pendingUiStart,pendingUiStop, groupStatesChanged, groupPendingChanged, onBeforeValidation, onAfterValidation){
+function InputGroup(inputsArray,submitElems,onValidationSuccess,onValidationFailure,pendingUiStart,pendingUiStop, groupStatesChanged, groupPendingChanged, onBeforeValidation, onAfterValidation,resetElems){
 
     if(!onValidationSuccess || !onValidationFailure) throw ERROR.mandatorySuccessFailure;
 
@@ -419,11 +422,18 @@ function InputGroup(inputsArray,submitElems,onValidationSuccess,onValidationFail
 
     this.stateCounters[stateEnum.valid] = inputsArray.length;
 
-    this.submitElems = Array.prototype.slice.call((submitElems));
+    this.submitElems = Array.prototype.slice.call(submitElems);
 
     this.submitElems.forEach(function(submit){
         submit.addEventListener('click',this.getOnSubmit.call(this));
     },this);
+
+    if (resetElems){
+        Array.prototype.slice.call(resetElems).forEach(function(submit){
+            submit.addEventListener('click',this.reset.bind(this));
+        },this);
+    }
+    
 
 }
 
@@ -523,7 +533,9 @@ InputGroup.prototype = (function(){
         },this);
     }
 
-    function reset(){
+    function reset(e){
+
+        if(e && e.preventDefault) e.preventDefault();
 
         this.inputs.forEach(function(input){
             input.reset();
