@@ -425,13 +425,13 @@ function InputGroup(inputsArray, submitElems, onValidationSuccess, onValidationF
 InputGroup.prototype = (function() {
 
     return {
+        updateGroupListeners: updateGroupListeners,
+        updateGroupStates: updateGroupStates,
+        reset: reset,
         _isValid: _isValid,
         _isPending: _isPending,
         _getOnSubmit: _getOnSubmit,
-        _triggerInputsValidation: _triggerInputsValidation,
-        updateGroupListeners: updateGroupListeners,
-        updateGroupStates: updateGroupStates,
-        reset: reset
+        _triggerInputsValidation: _triggerInputsValidation
     };
 
     function _isValid() {
@@ -720,21 +720,19 @@ function Input(el, validatorsNameOptionsTuples, onInputValidationResult, isBlurO
 Input.prototype = (function() {
 
     return {
-        _reBindCheckedElement: _reBindCheckedElement,
         triggerValidation: triggerValidation,
+        setGroup: setGroup,
+        reset: reset,
+        _reBindCheckedElement: _reBindCheckedElement,
         _runValidators: _runValidators,
         _changeEventType: _changeEventType,
         _initListeners: _initListeners,
-        setGroup: setGroup,
         _addChangeListener: _addChangeListener,
         _addEventType: _addEventType,
         _removeActiveEventType: _removeActiveEventType,
         _getUpdateInputValidationResultAsync: _getUpdateInputValidationResultAsync,
-        _updateInputValidationResult: _updateInputValidationResult,
-        reset: reset
+        _updateInputValidationResult: _updateInputValidationResult
     };
-
-    // public
 
     function _reBindCheckedElement() {
 
@@ -827,8 +825,6 @@ Input.prototype = (function() {
         this._inputState = new InputState();
         this._onInputValidationResult(this._el, stateEnum.valid, '', stateEnum); // called with valid state to clear any previous errors UI
     }
-
-    // private
 
     function _addChangeListener() {
 
