@@ -344,78 +344,78 @@ var ERROR = require('./constants').ERROR;
  * @param {function} [groupPendingChanged]
  * @param {function} [onBeforeValidation] Signature of {@link _internal.onBeforeValidation onBeforeValidation}. A function to be called before triggering any of the input's validators
  * @param {function} [onAfterValidation] Signature of {@link _internal.onAfterValidation onAfterValidation}. A function to be called after triggering all of the input's validators
- * @param {HTMLElement[]} [resetElems] an array of elements that should trigger the group's validation reset.
+ * @param {HTMLElement[]} [_resetElems] an array of elements that should trigger the group's validation _reset.
 
  */
-function InputGroup(inputsArray, submitElems, onValidationSuccess, onValidationFailure, pendingUiStart, pendingUiStop, groupStatesChanged, groupPendingChanged, onBeforeValidation, onAfterValidation, resetElems) {
+function InputGroup(inputsArray, submitElems, onValidationSuccess, onValidationFailure, pendingUiStart, pendingUiStop, groupStatesChanged, groupPendingChanged, onBeforeValidation, onAfterValidation, _resetElems) {
 
     if (!onValidationSuccess || !onValidationFailure) throw ERROR.mandatorySuccessFailure;
 
-    this.inputs = [];
-    this.inputElems = [];
-    this.submitElems = [];
-    this.resetElems = [];
+    this._inputs = [];
+    this._inputElems = [];
+    this._submitElems = [];
+    this._resetElems = [];
 
-    this.onValidationSuccess = onValidationSuccess;
-    this.onValidationFailure = onValidationFailure;
-    this.pendingUiStart = pendingUiStart;
-    this.pendingUiStop = pendingUiStop;
-    this.groupStatesChanged = groupStatesChanged;
+    this._onValidationSuccess = onValidationSuccess;
+    this._onValidationFailure = onValidationFailure;
+    this._pendingUiStart = pendingUiStart;
+    this._pendingUiStop = pendingUiStop;
+    this._groupStatesChanged = groupStatesChanged;
     this.onBeforeValidation = onBeforeValidation;
     this.onAfterValidation = onAfterValidation;
 
-    this.groupPendingChangedListeners = [];
-    this.groupPendingChangedListeners.push(
-        function(isPending) {
-            if (!isPending) {
-                if (this.isPendingUiStartRun) {
+    this._groupPendingChangedListeners = [];
+    this._groupPendingChangedListeners.push(
+        function(_isPending) {
+            if (!_isPending) {
+                if (this._isPendingUiStartRun) {
 
-                    this.pendingUiStop.call(this.pendingUiLastSubmitElem, this.inputElems, this.submitElems, this.resetElems);
+                    this._pendingUiStop.call(this._pendingUiLastSubmitElem, this._inputElems, this._submitElems, this._resetElems);
 
-                    this.getOnSubmit.call(this).call(this.pendingUiLastSubmitElem);
+                    this._getOnSubmit.call(this).call(this._pendingUiLastSubmitElem);
 
-                    this.isPendingUiStartRun = false;
-                    this.pendingUiLastSubmitElem = {};
+                    this._isPendingUiStartRun = false;
+                    this._pendingUiLastSubmitElem = {};
                 }
             }
         }.bind(this)
     );
 
     if (groupPendingChanged)
-        this.groupPendingChangedListeners.push(groupPendingChanged);
+        this._groupPendingChangedListeners.push(groupPendingChanged);
 
-    this.stateCounters = {};
-    this.stateCounters[stateEnum.invalid] = 0;
-    this.stateCounters[stateEnum.pending] = 0;
-    this.stateCounters[stateEnum.valid] = 0;
+    this._stateCounters = {};
+    this._stateCounters[stateEnum.invalid] = 0;
+    this._stateCounters[stateEnum.pending] = 0;
+    this._stateCounters[stateEnum.valid] = 0;
 
-    this.isPendingChangeTrueRun = false;
+    this._isPendingChangeTrueRun = false;
 
-    this.isPendingUiStartRun = false;
+    this._isPendingUiStartRun = false;
 
-    this.pendingUiLastSubmitElem = {};
+    this._pendingUiLastSubmitElem = {};
 
-    this.inputs = inputsArray.map(function(input) {
+    this._inputs = inputsArray.map(function(input) {
         input.setGroup(this);
         return input;
     }, this);
 
-    this.inputElems = inputsArray
+    this._inputElems = inputsArray
         .map(function(input) {
             return input.el;
         });
 
-    this.stateCounters[stateEnum.valid] = inputsArray.length;
+    this._stateCounters[stateEnum.valid] = inputsArray.length;
 
-    this.submitElems = Array.prototype.slice.call(submitElems);
+    this._submitElems = Array.prototype.slice.call(submitElems);
 
-    this.submitElems.forEach(function(submit) {
-        submit.addEventListener('click', this.getOnSubmit.call(this));
+    this._submitElems.forEach(function(submit) {
+        submit.addEventListener('click', this._getOnSubmit.call(this));
     }, this);
 
-    if (resetElems) {
-        this.resetElems = Array.prototype.slice.call(resetElems);
-        this.resetElems.forEach(function(submit) {
+    if (_resetElems) {
+        this._resetElems = Array.prototype.slice.call(_resetElems);
+        this._resetElems.forEach(function(submit) {
             submit.addEventListener('click', this.reset.bind(this));
         }, this);
     }
@@ -425,64 +425,64 @@ function InputGroup(inputsArray, submitElems, onValidationSuccess, onValidationF
 InputGroup.prototype = (function() {
 
     return {
-        isValid: isValid,
-        isPending: isPending,
-        getOnSubmit: getOnSubmit,
-        triggerInputsValidation: triggerInputsValidation,
         updateGroupListeners: updateGroupListeners,
         updateGroupStates: updateGroupStates,
-        reset: reset
+        reset: reset,
+        _isValid: _isValid,
+        _isPending: _isPending,
+        _getOnSubmit: _getOnSubmit,
+        _triggerInputsValidation: _triggerInputsValidation
     };
 
-    function isValid() {
-        this.triggerInputsValidation();
+    function _isValid() {
+        this._triggerInputsValidation();
 
-        return (this.stateCounters[stateEnum.invalid] === 0 &&
-            this.stateCounters[stateEnum.pending] === 0);
-
-    }
-
-    function isPending() {
-        this.triggerInputsValidation();
-
-        return (this.stateCounters[stateEnum.invalid] === 0 &&
-            this.stateCounters[stateEnum.pending] > 0);
+        return (this._stateCounters[stateEnum.invalid] === 0 &&
+            this._stateCounters[stateEnum.pending] === 0);
 
     }
 
-    function getOnSubmit() {
+    function _isPending() {
+        this._triggerInputsValidation();
+
+        return (this._stateCounters[stateEnum.invalid] === 0 &&
+            this._stateCounters[stateEnum.pending] > 0);
+
+    }
+
+    function _getOnSubmit() {
 
         var self = this;
 
         return function(e) {
             if (e) e.preventDefault();
 
-            if (self.isPending()) {
-                self.pendingUiStart.call(this, self.inputElems, self.submitElems, self.resetElems);
-                self.isPendingUiStartRun = true;
-                self.pendingUiLastSubmitElem = this;
-            } else if (!self.isValid()) {
-                self.onValidationFailure.call(this,
-                    self.stateCounters[stateEnum.invalid],
-                    self.stateCounters[stateEnum.pending],
-                    self.stateCounters[stateEnum.valid]);
+            if (self._isPending()) {
+                self._pendingUiStart.call(this, self._inputElems, self._submitElems, self._resetElems);
+                self._isPendingUiStartRun = true;
+                self._pendingUiLastSubmitElem = this;
+            } else if (!self._isValid()) {
+                self._onValidationFailure.call(this,
+                    self._stateCounters[stateEnum.invalid],
+                    self._stateCounters[stateEnum.pending],
+                    self._stateCounters[stateEnum.valid]);
             } else {
-                self.onValidationSuccess.call(this);
+                self._onValidationSuccess.call(this);
             }
 
             if (DEBUG) {
                 console.debug('cuurent states:');
-                console.debug("invalid: " + self.stateCounters[stateEnum.invalid]);
-                console.debug("pending: " + self.stateCounters[stateEnum.pending]);
-                console.debug("valid: " + self.stateCounters[stateEnum.valid]);
+                console.debug("invalid: " + self._stateCounters[stateEnum.invalid]);
+                console.debug("pending: " + self._stateCounters[stateEnum.pending]);
+                console.debug("valid: " + self._stateCounters[stateEnum.valid]);
             }
 
         }
 
     }
 
-    function triggerInputsValidation() {
-        this.inputs.forEach(function(input) {
+    function _triggerInputsValidation() {
+        this._inputs.forEach(function(input) {
             input.triggerValidation();
         });
     }
@@ -490,23 +490,23 @@ InputGroup.prototype = (function() {
     function updateGroupStates(fromInputState, toInputState) {
         if (fromInputState.stateEnum === toInputState.stateEnum) return;
 
-        this.stateCounters[fromInputState.stateEnum]--;
-        this.stateCounters[toInputState.stateEnum]++;
+        this._stateCounters[fromInputState.stateEnum]--;
+        this._stateCounters[toInputState.stateEnum]++;
 
     }
 
     function updateGroupListeners() {
-        if (this.groupStatesChanged) this.groupStatesChanged();
+        if (this._groupStatesChanged) this._groupStatesChanged();
 
         // run both internal and user groupPendingChange functions
-        this.groupPendingChangedListeners.forEach(function(listener) {
+        this._groupPendingChangedListeners.forEach(function(listener) {
 
-            if (!this.isPendingChangeTrueRun && this.stateCounters[stateEnum.invalid] === 0 && this.stateCounters[stateEnum.pending] > 0) {
+            if (!this._isPendingChangeTrueRun && this._stateCounters[stateEnum.invalid] === 0 && this._stateCounters[stateEnum.pending] > 0) {
                 listener(true);
-                this.isPendingChangeTrueRun = true;
-            } else if (this.isPendingChangeTrueRun && this.stateCounters[stateEnum.pending] === 0) {
+                this._isPendingChangeTrueRun = true;
+            } else if (this._isPendingChangeTrueRun && this._stateCounters[stateEnum.pending] === 0) {
                 listener(false);
-                this.isPendingChangeTrueRun = false;
+                this._isPendingChangeTrueRun = false;
             }
         }, this);
     }
@@ -515,13 +515,13 @@ InputGroup.prototype = (function() {
 
         if (e && e.preventDefault) e.preventDefault();
 
-        this.inputs.forEach(function(input) {
+        this._inputs.forEach(function(input) {
             input.reset();
         });
 
-        this.stateCounters[stateEnum.invalid] = 0;
-        this.stateCounters[stateEnum.pending] = 0;
-        this.stateCounters[stateEnum.valid] = this.inputs.length;
+        this._stateCounters[stateEnum.invalid] = 0;
+        this._stateCounters[stateEnum.pending] = 0;
+        this._stateCounters[stateEnum.valid] = this._inputs.length;
     }
 
 })();
@@ -558,7 +558,7 @@ module.exports = InputGroup;
  *  @memberof! _internal
  *  @param {HTMLElement[]} inputElems the group's input elements
  *  @param {HTMLElement[]} submitElems the group's submit elements
- *  @param {HTMLElement[]} resetElems the group's reset elements
+ *  @param {HTMLElement[]} _resetElems the group's _reset elements
  */
 
 /** <b> IMPORTANT - the 'this' context inside: {HTMLElement} of the original submitElem that triggered the validation </b>
@@ -567,7 +567,7 @@ module.exports = InputGroup;
  *  @memberof! _internal
  *  @param {HTMLElement[]} inputElems the group's input elements
  *  @param {HTMLElement[]} submitElems the group's submit elements
- *  @param {HTMLElement[]} resetElems the group's reset elements
+ *  @param {HTMLElement[]} _resetElems the group's _reset elements
  */
 
 /** A function to be called before triggering any of the input's validators
@@ -625,22 +625,22 @@ function Input(el, validatorsNameOptionsTuples, onInputValidationResult, isBlurO
         throw 'only operates on the following html tags: ' + validInputTagNames.toString();
     }
 
-    this.el = el;
-    this.validatorsNameOptionsTuples = validatorsNameOptionsTuples;
-    this.onInputValidationResult = onInputValidationResult || defaultOnInputValidationResult;
-    this.isBlurOnly = isBlurOnly;
+    this._el = el;
+    this._validatorsNameOptionsTuples = validatorsNameOptionsTuples;
+    this._onInputValidationResult = onInputValidationResult || defaultOnInputValidationResult;
+    this._isBlurOnly = isBlurOnly;
 
-    this.validators = buildValidators();
+    this._validators = buildValidators();
 
-    this.inputState = new InputState();
+    this._inputState = new InputState();
 
-    this.elName = el.nodeName.toLowerCase();
-    this.elType = el.type;
-    this.isKeyed = (this.elName === 'textarea' || keyStrokedInputTypes.indexOf(this.elType) > -1);
+    this._elName = el.nodeName.toLowerCase();
+    this._elType = el.type;
+    this._isKeyed = (this._elName === 'textarea' || keyStrokedInputTypes.indexOf(this._elType) > -1);
 
-    this._runValidatorsBounded = this.runValidators.bind(this);
+    this._runValidatorsBounded = this._runValidators.bind(this);
 
-    this.initListeners();
+    this._initListeners();
 
     function buildValidators() {
         var result = [];
@@ -720,89 +720,87 @@ function Input(el, validatorsNameOptionsTuples, onInputValidationResult, isBlurO
 Input.prototype = (function() {
 
     return {
-        reBindCheckedElement: reBindCheckedElement,
         triggerValidation: triggerValidation,
-        runValidators: runValidators,
-        changeEventType: changeEventType,
-        initListeners: initListeners,
         setGroup: setGroup,
-        addChangeListener: addChangeListener,
-        addEventType: addEventType,
-        removeActiveEventType: removeActiveEventType,
-        getUpdateInputValidationResultAsync: getUpdateInputValidationResultAsync,
-        updateInputValidationResult: updateInputValidationResult,
-        reset: reset
+        reset: reset,
+        _reBindCheckedElement: _reBindCheckedElement,
+        _runValidators: _runValidators,
+        _changeEventType: _changeEventType,
+        _initListeners: _initListeners,
+        _addChangeListener: _addChangeListener,
+        _addEventType: _addEventType,
+        _removeActiveEventType: _removeActiveEventType,
+        _getUpdateInputValidationResultAsync: _getUpdateInputValidationResultAsync,
+        _updateInputValidationResult: _updateInputValidationResult
     };
 
-    // public
-
-    function reBindCheckedElement() {
+    function _reBindCheckedElement() {
 
         // reBind only radio and checkbox buttons
-        if (!(this.el.nodeName.toLowerCase() === 'input' && (this.el.type === 'radio' || this.el.type === 'checkbox'))) {
+        if (!(this._el.nodeName.toLowerCase() === 'input' && (this._el.type === 'radio' || this._el.type === 'checkbox'))) {
             return;
         }
 
-        var checkedElement = document.querySelector('input[name="' + this.el.name + '"]:checked');
+        var checkedElement = document.querySelector('input[name="' + this._el.name + '"]:checked');
         if (checkedElement) {
-            this.el = checkedElement;
-            this.inputState.isNoneChecked = false;
+            this._el = checkedElement;
+            this._inputState.isNoneChecked = false;
         } else {
-            this.inputState.isNoneChecked = true;
+            this._inputState.isNoneChecked = true;
         }
 
     }
 
     function triggerValidation() {
-        if (this.inputState.validationCycle === 0 || this.inputState.isChanged) {
+        if (this._inputState.validationCycle === 0 || this._inputState.isChanged) {
             this._runValidatorsBounded();
         }
     }
 
-    function changeEventType(eventType) {
-        if (!this.isKeyed) return;
-        if (eventType === this.inputState.activeEventType) return;
-        this.removeActiveEventType();
-        this.addEventType(eventType);
+    function _changeEventType(eventType) {
+        if (!this._isKeyed) return;
+        if (eventType === this._inputState.activeEventType) return;
+        this._removeActiveEventType();
+        this._addEventType(eventType);
     }
 
     function setGroup(value) {
-        this.group = value;
+        this._group = value;
     }
 
-    function initListeners() {
+    function _initListeners() {
 
-        this.addChangeListener();
-        if (this.isKeyed) {
-            this.addEventType('blur');
+        this._addChangeListener();
+        if (this._isKeyed) {
+            this._addEventType('blur');
         } else {
-            this.addEventType('change');
+            this._addEventType('change');
         }
 
     }
 
-    function runValidators(event, fromIndex) {
+    function _runValidators(event, fromIndex) {
 
-        this.inputState.validationCycle++;
-        this.reBindCheckedElement();
+        this._inputState.validationCycle++;
+        this._reBindCheckedElement();
 
-        if (typeof this.group.onBeforeValidation === 'function') {
-            this.group.onBeforeValidation(this.el);
+        if (typeof this._group.onBeforeValidation === 'function') {
+            this._group.onBeforeValidation(this._el);
         }
 
         var validationsResult, validatorName;
 
         var i = fromIndex || 0;
-        for (; i < this.validators.length; i++) {
-            var validator = this.validators[i];
-            var elementValue = this.inputState.isNoneChecked ? '' : this.el.value;
+        for (; i < this._validators.length; i++) {
+            var validator = this._validators[i];
+            var elementValue = this._inputState.isNoneChecked ? '' : this._el.value;
             // if async, then return a pending enum with empty message and call the callback with result once ready
-            var validatorResult = validator.run(elementValue, this.getUpdateInputValidationResultAsync(validator.name, i, this.inputState.validationCycle));
+            var validatorResult = validator.run(elementValue, this._getUpdateInputValidationResultAsync(validator.name, i, this._inputState.validationCycle));
             if (validatorResult.stateEnum !== stateEnum.valid) {
                 validationsResult = validatorResult;
                 validatorName = validator.name;
-                if (!this.isBlurOnly) {
-                    this.changeEventType('input'); //TODO: call only once?
+                if (!this._isBlurOnly) {
+                    this._changeEventType('input'); //TODO: call only once?
                 }
                 break;
             }
@@ -810,85 +808,83 @@ Input.prototype = (function() {
         }
 
         validationsResult = validationsResult || new ValidationState('', stateEnum.valid);
-        this.updateInputValidationResult(validationsResult, validatorName);
+        this._updateInputValidationResult(validationsResult, validatorName);
 
         // new...
-        this.inputState.isChanged = false; // TODO: move to top of function
+        this._inputState.isChanged = false; // TODO: move to top of function
 
-        if (typeof this.group.onAfterValidation === 'function') {
-            this.group.onAfterValidation(this.el);
+        if (typeof this._group.onAfterValidation === 'function') {
+            this._group.onAfterValidation(this._el);
         }
 
     }
 
     function reset() {
-        this.removeActiveEventType();
-        this.initListeners();
-        this.inputState = new InputState();
-        this.onInputValidationResult(this.el, stateEnum.valid, '', stateEnum); // called with valid state to clear any previous errors UI
+        this._removeActiveEventType();
+        this._initListeners();
+        this._inputState = new InputState();
+        this._onInputValidationResult(this._el, stateEnum.valid, '', stateEnum); // called with valid state to clear any previous errors UI
     }
 
-    // private
-
-    function addChangeListener() {
+    function _addChangeListener() {
 
         var self = this;
 
-        if (this.isKeyed) {
-            if (this.isBlurOnly) {
+        if (this._isKeyed) {
+            if (this._isBlurOnly) {
                 return;
             } else {
-                this.el.addEventListener('input', function() {
-                    self.inputState.isChanged = true;
+                this._el.addEventListener('input', function() {
+                    self._inputState.isChanged = true;
                 }, false);
             }
-        } else if (this.elName === 'input' && (this.elType === 'radio' || this.elType === 'checkbox')) {
+        } else if (this._elName === 'input' && (this._elType === 'radio' || this._elType === 'checkbox')) {
 
-            var groupElements = document.querySelectorAll('input[name="' + this.el.name + '"]');
+            var groupElements = document.querySelectorAll('input[name="' + this._el.name + '"]');
 
             var i = 0;
             for (; i < groupElements.length; i++) {
                 groupElements[i].addEventListener('change', function() {
-                    self.inputState.isChanged = true;
+                    self._inputState.isChanged = true;
                 }, false);
             }
-        } else if (this.elName === 'select') {
-            this.el.addEventListener('change', function() {
-                self.inputState.isChanged = true;
+        } else if (this._elName === 'select') {
+            this._el.addEventListener('change', function() {
+                self._inputState.isChanged = true;
             }, false);
         }
     }
 
-    function addEventType(eventType) {
-        if (this.isKeyed) {
-            this.el.addEventListener(eventType, this._runValidatorsBounded, false);
-        } else if (this.elName === 'input' && (this.elType === 'radio' || this.elType === 'checkbox')) {
+    function _addEventType(eventType) {
+        if (this._isKeyed) {
+            this._el.addEventListener(eventType, this._runValidatorsBounded, false);
+        } else if (this._elName === 'input' && (this._elType === 'radio' || this._elType === 'checkbox')) {
 
-            var groupElements = document.querySelectorAll('input[name="' + this.el.name + '"]');
+            var groupElements = document.querySelectorAll('input[name="' + this._el.name + '"]');
 
             var i = 0;
             for (; i < groupElements.length; i++) {
                 groupElements[i].addEventListener(eventType, this._runValidatorsBounded, false);
             }
-        } else if (this.elName === 'select') {
-            this.el.addEventListener(eventType, this._runValidatorsBounded, false);
+        } else if (this._elName === 'select') {
+            this._el.addEventListener(eventType, this._runValidatorsBounded, false);
         }
 
-        this.inputState.activeEventType = eventType;
+        this._inputState.activeEventType = eventType;
     }
 
-    function removeActiveEventType() {
-        this.el.removeEventListener(this.inputState.activeEventType, this._runValidatorsBounded, false);
+    function _removeActiveEventType() {
+        this._el.removeEventListener(this._inputState.activeEventType, this._runValidatorsBounded, false);
     }
 
-    function getUpdateInputValidationResultAsync(validatorName, validatorIndex, asyncValidationCycle) {
+    function _getUpdateInputValidationResultAsync(validatorName, validatorIndex, asyncValidationCycle) {
 
         var self = this;
 
         return function(validatorResult) {
 
             // guard against updating async validations from old cycles
-            if (asyncValidationCycle && asyncValidationCycle !== self.inputState.validationCycle) {
+            if (asyncValidationCycle && asyncValidationCycle !== self._inputState.validationCycle) {
                 return;
             }
 
@@ -896,19 +892,19 @@ Input.prototype = (function() {
             if (validatorResult.stateEnum === stateEnum.valid && validatorIndex + 1 < self.validators.length) {
                 self._runValidatorsBounded(null, validatorIndex + 1);
             } else {
-                self.updateInputValidationResult(validatorResult, validatorName);
+                self._updateInputValidationResult(validatorResult, validatorName);
             }
         };
 
     }
 
-    function updateInputValidationResult(validationsResult, validatorName) {
+    function _updateInputValidationResult(validationsResult, validatorName) {
 
-        this.group.updateGroupStates(this.inputState.validationState, validationsResult); // filter equal state at caller
-        this.group.updateGroupListeners();
+        this._group.updateGroupStates(this._inputState.validationState, validationsResult); // filter equal state at caller
+        this._group.updateGroupListeners();
 
-        this.inputState.validationState = validationsResult;
-        this.onInputValidationResult(this.el, validationsResult, validatorName, stateEnum);
+        this._inputState.validationState = validationsResult;
+        this._onInputValidationResult(this._el, validationsResult, validatorName, stateEnum);
 
     }
 
