@@ -84,7 +84,7 @@ describe('validations', function() {
 
                 var msg = 'user bob exists';
 
-                setTimeout(dummyServiceCall, 5000);
+                setTimeout(dummyServiceCall, 0);
 
                 return new ValidationState('', stateEnum.pending);
 
@@ -217,6 +217,8 @@ describe('Sanity', function() {
 
 });
 
+
+// TODO: the function returned from _getUpdateInputValidationResultAsync does not get called- since tests do not wait for done()
 describe('Async', function() {
 
     // inject the HTML fixture for the tests
@@ -253,6 +255,20 @@ describe('Async', function() {
         expect(true).to.be.ok;
     });
 
+    it('should call pendingUiStart and pendingUiStop, if pending resolved to be valid, and there are more validation to run, run them', function() {
+
+        Name.dispatchEvent(clickEvent);
+        Name.value = "John Doe";
+
+        Email.dispatchEvent(clickEvent);
+        Email.value = "john@email.com";
+
+        SendButton.click();
+
+        // relays on done() inside these functions to test no errors
+        // TODO: use sinon...
+        expect(true).to.be.ok;
+    });
 
 });
 
