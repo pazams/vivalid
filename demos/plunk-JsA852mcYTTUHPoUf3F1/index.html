@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <link data-require="bootstrap-css@3.3.6" data-semver="3.3.6" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.css" />
+  <script src="https://cdn.rawgit.com/pazams/vivalid/0.2.0/dist/vivalid-bundle.js"></script>
+  <script src="https://cdn.rawgit.com/pazams/vivalid-rules-core/master/dist/vivalid-rules-core-bundle.min.js"></script>
+  <script src="demo-utils.js"></script>
+  <script src="demo.js"></script>
+  <link rel="stylesheet" href="demo.css">
+ 
+</head>
+
+<body>
+  <!-- 
+  inline css styles to make the exmaple work as a standalone 
+  without a css file other than boostrap 
+  -->
+
+  <form data-vivalid-on-validation='["onValidationSuccess", "onValidationFailure"]' data-vivalid-group='' id="MainForm">
+
+    <div class="container" style="margin-top: 5px;">
+      <div class="row">
+
+        <div class="col-sm-7">
+
+          <div class="panel panel-primary">
+            <div class="panel-heading">
+              <h3 class="panel-title">Form</h3> </div>
+            <div class="panel-body" style="height: 450px; overflow: auto;">
+
+              <div class="form-group">
+                <label class="control-label">Input with default UI</label>
+                <input type="text" class="form-control" data-vivalid-tuples='[["required",{}],["betweenlength",{"min": 4, "max": 10}]]' placeholder="Required , between 4-10 chars" />
+              </div>
+              <div class="form-group">
+                <label class="control-label">Input with custom UI via js handler (onInputValidationResult) </label>
+                <input type="text" class="form-control" data-vivalid-result="onInputValidationResult" data-vivalid-tuples='[["required",{}],["betweenlength",{"min": 4, "max": 10}]]' placeholder="Required , between 4-10 chars" />
+                <div style="display: none;" class="alert alert-danger fade in js-message"></div>
+              </div>
+
+              <div class="form-group customCss">
+                <label class="control-label">Input with custom UI via css: <code>.vivalid-error</code> and <code>.vivalid-error-input</code> in demo.css</label>
+                <input type="text" class="form-control" data-vivalid-tuples='[["required",{}],["betweenlength",{"min": 4, "max": 10}]]' placeholder="Required , between 4-10 chars" />
+              </div>
+
+              <div>
+                <input type="button" class="btn btn-primary" data-vivalid-submit="" value="send" id="SendButton" />
+                <input type="button" class="btn btn-primary" data-vivalid-reset="" value="reset validation" />
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+        <div class="col-sm-5">
+          <div class="panel panel-info">
+            <div class="panel-heading">
+              <h3 class="panel-title">Logger</h3> </div>
+            <div class="panel-body" style="height: 450px; overflow: auto;">
+              <span id="CleanLog" class="btn btn-link">X (clear)</span>
+              <div id="Log"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+</body>
+
+</html>

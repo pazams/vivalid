@@ -1,0 +1,13 @@
+.customCss .vivalid-error {
+  
+  background-color: green !important;
+  color: white !important;
+  padding: 5px;
+  
+}
+
+.customCss .vivalid-error-input {
+  
+border-color: green !important;
+
+}

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <link data-require="bootstrap-css@3.3.6" data-semver="3.3.6" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.css" />
+  <script src="https://cdn.rawgit.com/pazams/vivalid/0.2.0/dist/vivalid-bundle.js"></script>
+  <script src="https://cdn.rawgit.com/pazams/vivalid-rules-core/master/dist/vivalid-rules-core-bundle.min.js"></script>
+  <script src="demo-utils.js"></script>
+  <script src="demo.js"></script>
+
+</head>
+
+<body>
+  <!-- 
+  inline css styles to make the exmaple work as a standalone 
+  without a css file other than boostrap 
+  -->
+
+  <form data-vivalid-on-validation='["onValidationSuccess", "onValidationFailure"]' data-vivalid-group='' id="MainForm">
+
+    <div class="container" style="margin-top: 5px;">
+      <div class="row">
+
+        <div class="col-sm-7">
+
+          <div class="panel panel-primary">
+            <div class="panel-heading">
+              <h3 class="panel-title">Form</h3> </div>
+            <div class="panel-body" style="height: 300px; overflow: auto;">
+
+
+              <div class="form-group">
+                <label class="control-label">Required</label>
+                <div>
+                  <input type="radio" name="gender" value="male" data-vivalid-tuples='[["required",{}]]'> Male
+                  <input type="radio" name="gender" value="female"> Female
+                  <input type="radio" name="gender" value="other"> Other
+                </div>
+
+              </div>
+
+              <div class="form-group">
+                <label class="control-label">Required</label>
+                <div>
+                  <input type="checkbox" name="vehicle" value="Bike" data-vivalid-tuples='[["required",{}]]'> I have a bike
+                  <input type="checkbox" name="vehicle" value="Car"> I have a car
+                </div>
+              </div>
+
+              <div>
+                <input type="button" class="btn btn-primary" data-vivalid-submit="" value="send" id="SendButton" />
+                <input type="button" class="btn btn-primary" data-vivalid-reset="" value="reset validation" />
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+        <div class="col-sm-5">
+          <div class="panel panel-info">
+            <div class="panel-heading">
+              <h3 class="panel-title">Logger</h3> </div>
+            <div class="panel-body" style="height: 300px; overflow: auto;">
+              <span id="CleanLog" class="btn btn-link">X (clear)</span>
+              <div id="Log"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+</body>
+
+</html>
