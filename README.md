@@ -10,7 +10,7 @@ Some constraints, such as "existing user" or "valid location", need to be valida
 ## Main features
 ### Consolidates Sync and Async validations
 Sync rules return with `stateEnum.invalid` or `stateEnum.valid`  
-Asyc rules return with `stateEnum.pending`, and also call a callback with `stateEnum.invalid` or `stateEnum.valid` when ready. Callbacks from previous cycles get filtered out, which helps when AJAX responses are out of order from multiple parallel requests.
+Async rules return with `stateEnum.pending`, and also call a callback with `stateEnum.invalid` or `stateEnum.valid` when ready. Callbacks from previous cycles get filtered out, which helps when AJAX responses are out of order from multiple parallel requests.
 
 
 Demo: https://embed.plnkr.co/daGXkk1RrdRxjFWhQgwX/
@@ -28,11 +28,11 @@ Data attribute | defined on    | notes
 data-vivalid-group | group | defines an input group. may be applied on (but not restricted to) `<form>` elements. the value may used with [htmlInterface api](http://www.pazams.com/vivalid/documentation/vivalid.htmlInterface.html) in resetGroup.
 data-vivalid-on-validation | group | references success and failure callbacks.
 data-vivalid-pending-ui | group | references start and stop pending ui callbacks. used only in groups which contain async validators.
-data-vivali-after-validation | group | references before and after validation callbacks. Defined on group level, but gets called on each input individually.
+data-vivalid-after-validation | group | references before and after validation callbacks. Defined on group level, but gets called on each input individually.
 data-vivalid-tuples | input | an array of [validatorsNameOptionsTuple] (http://www.pazams.com/vivalid/documentation/-_internal.html#..validatorsNameOptionsTuple) in JSON format.
-vivalid-blur-only | input | marks an input to be evluated on `blur` event only, as opposed to default way: first evulated on `blur` and after one event, evulate on `input` event.
-data-vivalid-submit | button | triggers the group validation. `preventDeault()` is applied on the DOM. Taking further action such as submitting a form, should be defined on the group's validation success callback.
-data-vivalid-reset | button | k
+data-vivalid-blur-only | input | marks an input to be evaluated on `blur` event only, as opposed to default way: first evaluated on `blur` event, and after one event, evaluate on `input` event.
+data-vivalid-submit | button | triggers the group validation. Taking further action such as submitting a form, should be defined on the group's validation success callback. `preventDefault()` is applied to the DOM event. 
+data-vivalid-reset | button | resets the state of the validation. this does not reset the form/group or clear its contents. This functionality, through the js api, is useful for SPA's. `preventDefault()` is applied to the DOM event.
 
 
 ### Separation of validator rules
@@ -58,5 +58,5 @@ Demo: https://embed.plnkr.co/xtxe1YfsmxRR9hacZ3sn/
 * `bower install vivalid`
 * (optional) `bower install vivalid-rules-core`
 
-## Contributers
+## Contributors
 read [this](https://github.com/pazams/vivalid/issues/1) before attempting to `gulp build`
