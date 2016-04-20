@@ -32,7 +32,7 @@ describe('validations', function() {
 
 
     function isErrorDisplayed(el) {
-        return (el.nextSibling.className === "vivalid-error");
+        return (el.nextElementSibling && el.nextElementSibling.className === "vivalid-error");
     }
 
     var addValidatorBuilder = vivalid.validatorRepo.addBuilder;

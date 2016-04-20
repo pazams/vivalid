@@ -706,8 +706,8 @@ function Input(el, validatorsNameOptionsTuples, onInputValidationResult, isBlurO
         }
 
         function getExistingErrorDiv(el) {
-            if (el.nextSibling.className === "vivalid-error") {
-                return el.nextSibling;
+            if (el.nextElementSibling && el.nextElementSibling.className === "vivalid-error") {
+                return el.nextElementSibling;
             }
 
         }
@@ -718,7 +718,7 @@ function Input(el, validatorsNameOptionsTuples, onInputValidationResult, isBlurO
             errorDiv.style.color = "#ff0000";
             var t = document.createTextNode(validationsResult.message);
             errorDiv.appendChild(t);
-            el.parentNode.insertBefore(errorDiv, el.nextSibling);
+            el.parentNode.insertBefore(errorDiv, el.nextElementSibling);
         }
 
     }
