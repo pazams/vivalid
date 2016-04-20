@@ -5,9 +5,11 @@ module.exports = {
     validInputTagNames: ['input', 'textarea', 'select'],
     keyStrokedInputTypes: ['text', 'email', 'password', 'search', 'hidden'],
     ERROR: {
-        mandatorySuccessFailure: 'passing callbacks for onValidationSuccess and onValidationFailure is mandatory'
+        mandatorySuccessFailure: 'passing callbacks for onValidationSuccess and onValidationFailure is mandatory',
+        errorInCallback: 'callback failed: '
     }
 };
+
 },{}],2:[function(require,module,exports){
 var isDataSetSupport = testIsDataSetSupport();
 
@@ -402,7 +404,7 @@ function InputGroup(inputsArray, submitElems, onValidationSuccess, onValidationF
 
     this._inputElems = inputsArray
         .map(function(input) {
-            return input.el;
+            return input._el;
         });
 
     this._stateCounters[stateEnum.valid] = inputsArray.length;

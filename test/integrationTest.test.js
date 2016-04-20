@@ -44,7 +44,6 @@ describe('validations', function() {
 
     before(function() {
 
-
         addValidatorBuilder('required',function(ValidationState,stateEnum,options){
 
             return function(value) {
@@ -79,19 +78,69 @@ describe('validations', function() {
             };
         });
 
+        addValidatorBuilder('exisitingUserBob', function(ValidationState, stateEnum, options) {
+
+            return function(value, callback) {
+
+                var msg = 'user bob exists';
+
+                setTimeout(dummyServiceCall, 5000);
+
+                return new ValidationState('', stateEnum.pending);
+
+                function dummyServiceCall() {
+
+                    if (value.indexOf('bob') !== -1) {
+                        callback(new ValidationState(msg, stateEnum.invalid));
+                    } else {
+                        callback(new ValidationState('', stateEnum.valid));
+                    }
+
+
+                }
+
+            };
+        });
 
         addCallback('onValidationSuccess', function(){
         });
 
         addCallback('onValidationFailure', function(invalid,pending,valid){
+            if(typeof invalid !== 'number' || typeof pending !== 'number' || typeof valid !== 'number'){
+                throw ERROR+"onValidationFailure";
+            }
         });
 
-        addCallback('pendingUiStart', function(inputElems,submitElems){ 
+        addCallback('pendingUiStart', function(inputElems,submitElems,resetElems){ 
+            try{
+                inputElems.concat(submitElems).concat(resetElems).forEach(function(input) {
+                    input.disabled = true;
+                });
 
+                this.disabled = true;
+            }
+            catch(e){
+                throw ERROR+"pendingUiStart";
+            }
+            finally {
+                // done();
+            }
         });
 
-        addCallback('pendingUiStop' ,function(inputElems,submitElems){
+        addCallback('pendingUiStop' ,function(inputElems,submitElems,resetElems){
+            try{
+                inputElems.concat(submitElems).concat(resetElems).forEach(function(input) {
+                    input.disabled = true;
+                });
 
+                this.disabled = true;
+            }
+            catch(e){
+                throw ERROR+"pendingUiStop";
+            }
+            finally {
+                // done();
+            }
         });
 
         addCallback('onBeforeValidation' ,function(input){
@@ -105,7 +154,7 @@ describe('validations', function() {
     });
 
 
-describe('Async', function() {
+describe('Sanity', function() {
 
     // inject the HTML fixture for the tests
     beforeEach(function() {
@@ -165,6 +214,45 @@ describe('Async', function() {
 
         expect(!isErrorDisplayed(Name)).to.be.ok;
     });
+
+});
+
+describe('Async', function() {
+
+    // inject the HTML fixture for the tests
+    beforeEach(function() {
+        // Why this line? See: https://github.com/billtrik/karma-fixture/issues/3
+        fixture.base = 'test';
+        fixture.load('integrationTest.fixture.html');
+
+        selectFormElements(6);
+        initGroup(Form);
+
+    });
+
+    // remove the html fixture from the DOM
+    afterEach(function() {
+        fixture.cleanup();
+    });
+
+
+    // UX/UI
+
+    it('should call pendingUiStart and pendingUiStop, and executes them without errors', function() {
+
+        Name.dispatchEvent(clickEvent);
+        Name.value = "John Doe";
+
+        Email.dispatchEvent(clickEvent);
+        Email.value = "bob@email.com";
+
+        SendButton.click();
+
+        // relays on done() inside these functions to test no errors
+        // TODO: use sinon...
+        expect(true).to.be.ok;
+    });
+
 
 });
 

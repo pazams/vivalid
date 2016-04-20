@@ -21,6 +21,8 @@
 </form>
 
 
+
+
 <form id="Form2" data-vivalid-group data-vivalid-on-validation='["onValidationSuccess", "onValidationFailure"]' > 
     <div>
         <input id="Name2" type="text" placeholder="First Name" data-vivalid-tuples='[["required",{}],["maxlength", {"max": 4}]]' />
@@ -85,6 +87,18 @@ data-vivalid-after-validation="onAfterValidation">
 
 </form>
 
+<form id="Form6" data-vivalid-group="FirstGroup" data-vivalid-on-validation='["onValidationSuccess", "onValidationFailure"]' data-vivalid-pending-ui='["pendingUiStart", "pendingUiStop"]' > 
+    <div>
+        <input id="Name6" type="text" placeholder="First Name" data-vivalid-tuples='[["required",{}]]' />
+    </div>
+
+    <div>
+    <input id="Email6" type="text" placeholder="Email" data-vivalid-tuples='[["required",{}],["exisitingUserBob", {}]]' />
+    </div>
+   <div>
+        <input id="SendButton6" type="button" value="send"  data-vivalid-submit />
+    </div>
+</form>
 
 
 
