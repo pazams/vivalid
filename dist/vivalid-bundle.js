@@ -363,8 +363,8 @@ function InputGroup(inputsArray, submitElems, onValidationSuccess, onValidationF
     this._pendingUiStart = pendingUiStart;
     this._pendingUiStop = pendingUiStop;
     this._groupStatesChanged = groupStatesChanged;
-    this.onBeforeValidation = onBeforeValidation;
-    this.onAfterValidation = onAfterValidation;
+    this._onBeforeValidation = onBeforeValidation;
+    this._onAfterValidation = onAfterValidation;
 
     this._groupPendingChangedListeners = [];
     this._groupPendingChangedListeners.push(
@@ -404,7 +404,7 @@ function InputGroup(inputsArray, submitElems, onValidationSuccess, onValidationF
 
     this._inputElems = inputsArray
         .map(function(input) {
-            return input._el;
+            return input.getDomElement();
         });
 
     this._stateCounters[stateEnum.valid] = inputsArray.length;
@@ -430,6 +430,8 @@ InputGroup.prototype = (function() {
         updateGroupListeners: updateGroupListeners,
         updateGroupStates: updateGroupStates,
         reset: reset,
+        getOnBeforeValidation: getOnBeforeValidation, 
+        getOnAfterValidation: getOnAfterValidation,
         _isValid: _isValid,
         _isPending: _isPending,
         _getOnSubmit: _getOnSubmit,
@@ -487,6 +489,14 @@ InputGroup.prototype = (function() {
         this._inputs.forEach(function(input) {
             input.triggerValidation();
         });
+    }
+
+    function getOnBeforeValidation(){
+        return this._onBeforeValidation;
+    }
+
+    function getOnAfterValidation(){
+        return this._onAfterValidation;
     }
 
     function updateGroupStates(fromInputState, toInputState) {
@@ -631,15 +641,11 @@ function Input(el, validatorsNameOptionsTuples, onInputValidationResult, isBlurO
     this._validatorsNameOptionsTuples = validatorsNameOptionsTuples;
     this._onInputValidationResult = onInputValidationResult || defaultOnInputValidationResult;
     this._isBlurOnly = isBlurOnly;
-
     this._validators = buildValidators();
-
     this._inputState = new InputState();
-
     this._elName = el.nodeName.toLowerCase();
     this._elType = el.type;
     this._isKeyed = (this._elName === 'textarea' || keyStrokedInputTypes.indexOf(this._elType) > -1);
-
     this._runValidatorsBounded = this._runValidators.bind(this);
 
     this._initListeners();
@@ -725,6 +731,7 @@ Input.prototype = (function() {
         triggerValidation: triggerValidation,
         setGroup: setGroup,
         reset: reset,
+        getDomElement: getDomElement,
         _reBindCheckedElement: _reBindCheckedElement,
         _runValidators: _runValidators,
         _changeEventType: _changeEventType,
@@ -770,6 +777,10 @@ Input.prototype = (function() {
         this._group = value;
     }
 
+    function getDomElement(){
+        return this._el;
+    }
+
     function _initListeners() {
 
         this._addChangeListener();
@@ -786,8 +797,8 @@ Input.prototype = (function() {
         this._inputState.validationCycle++;
         this._reBindCheckedElement();
 
-        if (typeof this._group.onBeforeValidation === 'function') {
-            this._group.onBeforeValidation(this._el);
+        if (typeof this._group.getOnBeforeValidation() === 'function') {
+            this._group.getOnBeforeValidation()(this._el);
         }
 
         var validationsResult, validatorName;
@@ -812,11 +823,10 @@ Input.prototype = (function() {
         validationsResult = validationsResult || new ValidationState('', stateEnum.valid);
         this._updateInputValidationResult(validationsResult, validatorName);
 
-        // new...
-        this._inputState.isChanged = false; // TODO: move to top of function
+        this._inputState.isChanged = false; // TODO: move to top of function?
 
-        if (typeof this._group.onAfterValidation === 'function') {
-            this._group.onAfterValidation(this._el);
+        if (typeof this._group.getOnAfterValidation() === 'function') {
+            this._group.getOnAfterValidation()(this._el);
         }
 
     }
