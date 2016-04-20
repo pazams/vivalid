@@ -21,8 +21,18 @@ Either edit the UI through a CSS rule for `.vivalid-error` and `.vivalid-error-i
 Demo: https://embed.plnkr.co/JsA852mcYTTUHPoUf3F1/
 
 ### JS api or data attributes interface
-Use this library with full [javascript api](http://www.pazams.com/vivalid/documentation/vivalid.html), or the data attributes html interface (with js to only define callbacks).
+Use this library with full [javascript api](http://pazams.github.io/vivalid/documentation/vivalid.html), or the data attributes html interface (with js to only define callbacks).
 
+Data attribute | defined on    | notes
+-------------- | --------------| -----
+data-vivalid-group | group | defines an input group. may be applied on (but not restricted to) `<form>` elements. the value may used with [htmlInterface api](http://www.pazams.com/vivalid/documentation/vivalid.htmlInterface.html) in resetGroup.
+data-vivalid-on-validation | group | references success and failure callbacks.
+data-vivalid-pending-ui | group | references start and stop pending ui callbacks. used only in groups which contain async validators.
+data-vivali-after-validation | group | references before and after validation callbacks. Defined on group level, but gets called on each input individually.
+data-vivalid-tuples | input | an array of [validatorsNameOptionsTuple] (http://www.pazams.com/vivalid/documentation/-_internal.html#..validatorsNameOptionsTuple) in JSON format.
+vivalid-blur-only | input | marks an input to be evluated on `blur` event only, as opposed to default way: first evulated on `blur` and after one event, evulate on `input` event.
+data-vivalid-submit | button | triggers the group validation. `preventDeault()` is applied on the DOM. Taking further action such as submitting a form, should be defined on the group's validation success callback.
+data-vivalid-reset | button | k
 
 
 ### Separation of validator rules
@@ -47,12 +57,6 @@ Demo: https://embed.plnkr.co/xtxe1YfsmxRR9hacZ3sn/
 ### bower:
 * `bower install vivalid`
 * (optional) `bower install vivalid-rules-core`
-
-## JS interface
-See js [documentation](http://pazams.github.io/vivalid/documentation/vivalid.html)
-
-## Data attributes html interface
-See js [documentation](http://pazams.github.io/vivalid/documentation/vivalid.html), plus a short example ([live here](http://pazams.github.io/vivalid/demos/1/)):
 
 ## Contributers
 read [this](https://github.com/pazams/vivalid/issues/1) before attempting to `gulp build`
