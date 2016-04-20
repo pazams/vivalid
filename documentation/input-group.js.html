@@ -43,167 +43,196 @@ var ERROR = require('./constants').ERROR;
  * @param {function} [pendingUiStop] signature of {@link _internal.pendingUiStop pendingUiStop}. highly recommneded when using asyc client-server validations. A function called when leaving a group pending state after a submitElem is clicked. Use this function to undo the UX effects taken inside pendingUiStart.
  * @param {function} [groupStatesChanged]
  * @param {function} [groupPendingChanged]
+ * @param {function} [onBeforeValidation] Signature of {@link _internal.onBeforeValidation onBeforeValidation}. A function to be called before triggering any of the input's validators
+ * @param {function} [onAfterValidation] Signature of {@link _internal.onAfterValidation onAfterValidation}. A function to be called after triggering all of the input's validators
+ * @param {HTMLElement[]} [_resetElems] an array of elements that should trigger the group's validation _reset.
+
  */
-function InputGroup(inputsArray,submitElems,onValidationSuccess,onValidationFailure,pendingUiStart,pendingUiStop, groupStatesChanged, groupPendingChanged){
+function InputGroup(inputsArray, submitElems, onValidationSuccess, onValidationFailure, pendingUiStart, pendingUiStop, groupStatesChanged, groupPendingChanged, onBeforeValidation, onAfterValidation, _resetElems) {
 
-    if(!onValidationSuccess || !onValidationFailure) throw ERROR.mandatorySuccessFailure;
+    if (!onValidationSuccess || !onValidationFailure) throw ERROR.mandatorySuccessFailure;
 
-    this.inputs = [];
-    this.inputElems = [];
-    this.submitElems = [];
+    this._inputs = [];
+    this._inputElems = [];
+    this._submitElems = [];
+    this._resetElems = [];
 
+    this._onValidationSuccess = onValidationSuccess;
+    this._onValidationFailure = onValidationFailure;
+    this._pendingUiStart = pendingUiStart;
+    this._pendingUiStop = pendingUiStop;
+    this._groupStatesChanged = groupStatesChanged;
+    this._onBeforeValidation = onBeforeValidation;
+    this._onAfterValidation = onAfterValidation;
 
-    this.onValidationSuccess = onValidationSuccess;
-    this.onValidationFailure = onValidationFailure;
-    this.pendingUiStart = pendingUiStart;
-    this.pendingUiStop = pendingUiStop;
-    this.groupStatesChanged = groupStatesChanged;
+    this._groupPendingChangedListeners = [];
+    this._groupPendingChangedListeners.push(
+        function(_isPending) {
+            if (!_isPending) {
+                if (this._isPendingUiStartRun) {
 
-    this.groupPendingChangedListeners = [];
-    this.groupPendingChangedListeners.push(
-        function(isPending){
-            if(!isPending){
-                if(this.isPendingUiStartRun){
+                    this._pendingUiStop.call(this._pendingUiLastSubmitElem, this._inputElems, this._submitElems, this._resetElems);
 
-                    this.pendingUiStop.call(this.pendingUiLastSubmitElem,this.inputElems,this.submitElems);
+                    this._getOnSubmit.call(this).call(this._pendingUiLastSubmitElem);
 
-                    this.getOnSubmit.call(this).call(this.pendingUiLastSubmitElem);
-
-                    this.isPendingUiStartRun = false;
-                    this.pendingUiLastSubmitElem = {};
+                    this._isPendingUiStartRun = false;
+                    this._pendingUiLastSubmitElem = {};
                 }
             }
-        }.bind(this)      
+        }.bind(this)
     );
 
-    if (groupPendingChanged) 
-        this.groupPendingChangedListeners.push(groupPendingChanged);
+    if (groupPendingChanged)
+        this._groupPendingChangedListeners.push(groupPendingChanged);
 
-    this.stateCounters = {};
-    this.stateCounters[stateEnum.invalid] = 0;
-    this.stateCounters[stateEnum.pending] = 0;
-    this.stateCounters[stateEnum.valid] = 0;
+    this._stateCounters = {};
+    this._stateCounters[stateEnum.invalid] = 0;
+    this._stateCounters[stateEnum.pending] = 0;
+    this._stateCounters[stateEnum.valid] = 0;
 
-    this.isPendingChangeTrueRun = false;
+    this._isPendingChangeTrueRun = false;
 
-    this.isPendingUiStartRun = false;
+    this._isPendingUiStartRun = false;
 
-    this.pendingUiLastSubmitElem = {};
+    this._pendingUiLastSubmitElem = {};
 
-    this.inputs = inputsArray.map(function(input){
+    this._inputs = inputsArray.map(function(input) {
         input.setGroup(this);
         return input;
-    },this);
+    }, this);
 
-    this.inputElems = inputsArray
-    .map(function(input){
-        return input.el;
-    });
+    this._inputElems = inputsArray
+        .map(function(input) {
+            return input.getDomElement();
+        });
 
+    this._stateCounters[stateEnum.valid] = inputsArray.length;
 
-    this.stateCounters[stateEnum.valid] = inputsArray.length;
+    this._submitElems = Array.prototype.slice.call(submitElems);
 
-    this.submitElems = Array.prototype.slice.call((submitElems));
+    this._submitElems.forEach(function(submit) {
+        submit.addEventListener('click', this._getOnSubmit.call(this));
+    }, this);
 
-    this.submitElems.forEach(function(submit){
-        submit.addEventListener('click',this.getOnSubmit.call(this));
-    },this);
+    if (_resetElems) {
+        this._resetElems = Array.prototype.slice.call(_resetElems);
+        this._resetElems.forEach(function(submit) {
+            submit.addEventListener('click', this.reset.bind(this));
+        }, this);
+    }
 
 }
 
-InputGroup.prototype = (function(){
+InputGroup.prototype = (function() {
 
     return {
-        isValid: isValid,
-        isPending: isPending,
-        getOnSubmit:  getOnSubmit,
-        triggerInputsValidation: triggerInputsValidation,
         updateGroupListeners: updateGroupListeners,
         updateGroupStates: updateGroupStates,
+        reset: reset,
+        getOnBeforeValidation: getOnBeforeValidation, 
+        getOnAfterValidation: getOnAfterValidation,
+        _isValid: _isValid,
+        _isPending: _isPending,
+        _getOnSubmit: _getOnSubmit,
+        _triggerInputsValidation: _triggerInputsValidation
     };
 
-    function isValid(){
-        this.triggerInputsValidation();
+    function _isValid() {
+        this._triggerInputsValidation();
 
-        return (this.stateCounters[stateEnum.invalid] === 0 &amp;&amp;
-                this.stateCounters[stateEnum.pending] === 0);
-
-    }
-
-    function isPending(){
-        this.triggerInputsValidation();
-
-        return (this.stateCounters[stateEnum.invalid] === 0 &amp;&amp;
-                this.stateCounters[stateEnum.pending] > 0);
+        return (this._stateCounters[stateEnum.invalid] === 0 &amp;&amp;
+            this._stateCounters[stateEnum.pending] === 0);
 
     }
 
-    function getOnSubmit() {
+    function _isPending() {
+        this._triggerInputsValidation();
+
+        return (this._stateCounters[stateEnum.invalid] === 0 &amp;&amp;
+            this._stateCounters[stateEnum.pending] > 0);
+
+    }
+
+    function _getOnSubmit() {
 
         var self = this;
 
-        return function (e) {
-            if(e) e.preventDefault();
+        return function(e) {
+            if (e) e.preventDefault();
 
-            if(self.isPending()){
-                self.pendingUiStart.call(this,self.inputElems,self.submitElems);
-                self.isPendingUiStartRun = true;
-                self.pendingUiLastSubmitElem = this;
+            if (self._isPending()) {
+                self._pendingUiStart.call(this, self._inputElems, self._submitElems, self._resetElems);
+                self._isPendingUiStartRun = true;
+                self._pendingUiLastSubmitElem = this;
+            } else if (!self._isValid()) {
+                self._onValidationFailure.call(this,
+                    self._stateCounters[stateEnum.invalid],
+                    self._stateCounters[stateEnum.pending],
+                    self._stateCounters[stateEnum.valid]);
+            } else {
+                self._onValidationSuccess.call(this);
             }
 
-            else if(!self.isValid()){
-                self.onValidationFailure.call(this,
-                                              self.stateCounters[stateEnum.invalid],
-                                              self.stateCounters[stateEnum.pending],
-                                              self.stateCounters[stateEnum.valid]);
-            }
-
-            else {
-                self.onValidationSuccess.call(this); 
-            }
-
-            if (DEBUG){
+            if (DEBUG) {
                 console.debug('cuurent states:');
-                console.debug("invalid: " + self.stateCounters[stateEnum.invalid]);
-                console.debug("pending: " + self.stateCounters[stateEnum.pending]);
-                console.debug("valid: " + self.stateCounters[stateEnum.valid]);
+                console.debug("invalid: " + self._stateCounters[stateEnum.invalid]);
+                console.debug("pending: " + self._stateCounters[stateEnum.pending]);
+                console.debug("valid: " + self._stateCounters[stateEnum.valid]);
             }
 
         }
 
     }
 
-    function triggerInputsValidation(){
-        this.inputs.forEach(function(input){
+    function _triggerInputsValidation() {
+        this._inputs.forEach(function(input) {
             input.triggerValidation();
         });
     }
 
-    function updateGroupStates(fromInputState, toInputState){
+    function getOnBeforeValidation(){
+        return this._onBeforeValidation;
+    }
+
+    function getOnAfterValidation(){
+        return this._onAfterValidation;
+    }
+
+    function updateGroupStates(fromInputState, toInputState) {
         if (fromInputState.stateEnum === toInputState.stateEnum) return;
 
-        this.stateCounters[fromInputState.stateEnum]--;
-        this.stateCounters[toInputState.stateEnum]++;
+        this._stateCounters[fromInputState.stateEnum]--;
+        this._stateCounters[toInputState.stateEnum]++;
 
     }
 
-    function updateGroupListeners(){
-        if (this.groupStatesChanged) this.groupStatesChanged();
+    function updateGroupListeners() {
+        if (this._groupStatesChanged) this._groupStatesChanged();
 
         // run both internal and user groupPendingChange functions
-        this.groupPendingChangedListeners.forEach(function(listener){
+        this._groupPendingChangedListeners.forEach(function(listener) {
 
-            if (!this.isPendingChangeTrueRun &amp;&amp; this.stateCounters[stateEnum.invalid] === 0 &amp;&amp; this.stateCounters[stateEnum.pending] > 0)
-                {
-                    listener(true);
-                    this.isPendingChangeTrueRun = true;
-                }
-                else if (this.isPendingChangeTrueRun &amp;&amp; this.stateCounters[stateEnum.pending] === 0)
-                    {
-                        listener(false);
-                        this.isPendingChangeTrueRun = false;
-                    }
-        },this);
+            if (!this._isPendingChangeTrueRun &amp;&amp; this._stateCounters[stateEnum.invalid] === 0 &amp;&amp; this._stateCounters[stateEnum.pending] > 0) {
+                listener(true);
+                this._isPendingChangeTrueRun = true;
+            } else if (this._isPendingChangeTrueRun &amp;&amp; this._stateCounters[stateEnum.pending] === 0) {
+                listener(false);
+                this._isPendingChangeTrueRun = false;
+            }
+        }, this);
+    }
+
+    function reset(e) {
+
+        if (e &amp;&amp; e.preventDefault) e.preventDefault();
+
+        this._inputs.forEach(function(input) {
+            input.reset();
+        });
+
+        this._stateCounters[stateEnum.invalid] = 0;
+        this._stateCounters[stateEnum.pending] = 0;
+        this._stateCounters[stateEnum.valid] = this._inputs.length;
     }
 
 })();
@@ -240,6 +269,7 @@ module.exports = InputGroup;
  *  @memberof! _internal
  *  @param {HTMLElement[]} inputElems the group's input elements
  *  @param {HTMLElement[]} submitElems the group's submit elements
+ *  @param {HTMLElement[]} _resetElems the group's _reset elements
  */
 
 /** &lt;b> IMPORTANT - the 'this' context inside: {HTMLElement} of the original submitElem that triggered the validation &lt;/b>
@@ -248,6 +278,21 @@ module.exports = InputGroup;
  *  @memberof! _internal
  *  @param {HTMLElement[]} inputElems the group's input elements
  *  @param {HTMLElement[]} submitElems the group's submit elements
+ *  @param {HTMLElement[]} _resetElems the group's _reset elements
+ */
+
+/** A function to be called before triggering any of the input's validators
+ *  @name onBeforeValidation
+ *  @function
+ *  @memberof! _internal
+ *  @param {HTMLElement} el the input's DOM object.
+ */
+
+/** A function to be called after triggering all of the input's validators
+ *  @name onAfterValidation
+ *  @function
+ *  @memberof! _internal
+ *  @param {HTMLElement} el the input's DOM object.
  */
 </code></pre>
         </article>
@@ -265,7 +310,7 @@ module.exports = InputGroup;
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.3</a> on Sat Jan 02 2016 16:16:59 GMT+0200 (IST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.3</a> on Wed Apr 20 2016 20:07:21 GMT+0300 (IDT)
 </footer>
 
 <script> prettyPrint(); </script>

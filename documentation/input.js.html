@@ -29,7 +29,9 @@
             <pre class="prettyprint source linenums"><code>var validatorRepo = require('./validator-repo');
 var stateEnum = require('./state-enum');
 var ValidationState = require('./validation-state');
+var InputState = require('./input-state');
 var constants = require('./constants');
+var $$ = require('./dom-helpers');
 
 var validInputTagNames = constants.validInputTagNames;
 var keyStrokedInputTypes = constants.keyStrokedInputTypes;
@@ -42,107 +44,96 @@ var keyStrokedInputTypes = constants.keyStrokedInputTypes;
  * @param {HTMLElement} el the DOM object to wrap. For radios and checkboxes, pass only 1 element- the class will find it's siblings with the same name attribute.
  * @param {_internal.validatorsNameOptionsTuple[]} validatorsNameOptionsTuples &lt;b> the order matters- the input's state is the first {@link _internal.validatorsNameOptionsTuple validatorsNameOptionsTuple} that evulates to a non-valid (pending or invalid) state. &lt;/b>
  * @param {function} [onInputValidationResult] Signature of {@link _internal.onInputValidationResult onInputValidationResult}. A function to handle an input state or message change. If not passed, {@link _internal.defaultOnInputValidationResult defaultOnInputValidationResult} will be used.
+ * @param {boolean} isBlurOnly if true, doesn't not trigger validation on 'input' or 'change' events.
  */
-function Input(el, validatorsNameOptionsTuples, onInputValidationResult){
+function Input(el, validatorsNameOptionsTuples, onInputValidationResult, isBlurOnly) {
 
-    if (validInputTagNames.indexOf(el.nodeName.toLowerCase()) === -1){
+    if (validInputTagNames.indexOf(el.nodeName.toLowerCase()) === -1) {
         throw 'only operates on the following html tags: ' + validInputTagNames.toString();
     }
 
-    this.group = {};
+    this._el = el;
+    this._validatorsNameOptionsTuples = validatorsNameOptionsTuples;
+    this._onInputValidationResult = onInputValidationResult || defaultOnInputValidationResult;
+    this._isBlurOnly = isBlurOnly;
+    this._validators = buildValidators();
+    this._inputState = new InputState();
+    this._elName = el.nodeName.toLowerCase();
+    this._elType = el.type;
+    this._isKeyed = (this._elName === 'textarea' || keyStrokedInputTypes.indexOf(this._elType) > -1);
+    this._runValidatorsBounded = this._runValidators.bind(this);
 
-    this.el = el;
-    this.validators = buildValidators();
-    this.onInputValidationResult = onInputValidationResult || defaultOnInputValidationResult;
-    this.isNoneChecked = false;
+    this._initListeners();
 
-    this.validationState = new ValidationState('', stateEnum.valid);
-    this.validationCycle = 0;
-    this.isChanged = false;
-
-    this.elName = el.nodeName.toLowerCase();
-    this.elType = el.type;
-    this.isKeyed = (this.elName === 'textarea' || keyStrokedInputTypes.indexOf(this.elType) > -1);
-
-    this.activeEventType = '';
-
-    this._runValidatorsBounded = this.runValidators.bind(this);
-
-    this.initListeners();
-
-    function buildValidators(){
+    function buildValidators() {
         var result = [];
-        validatorsNameOptionsTuples.forEach(function(validatorsNameOptionsTuple){
+        validatorsNameOptionsTuples.forEach(function(validatorsNameOptionsTuple) {
             var validatorName = validatorsNameOptionsTuple[0];
             var validatorOptions = validatorsNameOptionsTuple[1];
 
-            result.push(
-                {
-                    name: validatorName,
-                    run: validatorRepo.build(validatorName,validatorOptions)
-                }
-            );
+            result.push({
+                name: validatorName,
+                run: validatorRepo.build(validatorName, validatorOptions)
+            });
 
         });
 
         return result;
     }
 
-
     /** The default {@link _internal.onInputValidationResult onInputValidationResult} used when {@link vivalid.Input} is initiated without a 3rd parameter
      *  @name defaultOnInputValidationResult
      *  @function
      *  @memberof! _internal
      */
-    function defaultOnInputValidationResult(el,validationsResult,validatorName,stateEnum) {
+    function defaultOnInputValidationResult(el, validationsResult, validatorName, stateEnum) {
 
         var errorDiv;
 
         // for radio buttons and checkboxes:  get the last element in group by name
-        if ((el.nodeName.toLowerCase() === 'input' &amp;&amp; (el.type === 'radio' || el.type === 'checkbox' ))){
+        if ((el.nodeName.toLowerCase() === 'input' &amp;&amp; (el.type === 'radio' || el.type === 'checkbox'))) {
 
-            var getAllByName = el.parentNode.querySelectorAll('input[name="'+el.name+'"]');
+            var getAllByName = el.parentNode.querySelectorAll('input[name="' + el.name + '"]');
 
-            el = getAllByName.item(getAllByName.length-1);
+            el = getAllByName.item(getAllByName.length - 1);
         }
 
-        if(validationsResult.stateEnum === stateEnum.invalid){
+        if (validationsResult.stateEnum === stateEnum.invalid) {
 
             errorDiv = getExistingErrorDiv(el);
-            if(errorDiv) {
+            if (errorDiv) {
                 errorDiv.textContent = validationsResult.message;
-            }
-            else {
-                appendNewErrorDiv(el,validationsResult.message);
+            } else {
+                appendNewErrorDiv(el, validationsResult.message);
             }
 
             el.style.borderStyle = "solid";
             el.style.borderColor = "#ff0000";
-        }
-
-        else {
+            $$.addClass(el, "vivalid-error-input");
+        } else {
             errorDiv = getExistingErrorDiv(el);
-            if(errorDiv) {
+            if (errorDiv) {
                 errorDiv.parentNode.removeChild(errorDiv);
                 el.style.borderStyle = "";
                 el.style.borderColor = "";
+                $$.removeClass(el, "vivalid-error-input");
             }
         }
 
         function getExistingErrorDiv(el) {
-            if (el.nextSibling.className === "vivalid-error") {
-                return el.nextSibling;
+            if (el.nextElementSibling &amp;&amp; el.nextElementSibling.className === "vivalid-error") {
+                return el.nextElementSibling;
             }
 
         }
 
-        function appendNewErrorDiv(el,message) {
-            errorDiv = document.createElement("DIV");        
+        function appendNewErrorDiv(el, message) {
+            errorDiv = document.createElement("DIV");
             errorDiv.className = "vivalid-error";
             errorDiv.style.color = "#ff0000";
-            var t = document.createTextNode(validationsResult.message); 
-            errorDiv.appendChild(t);                                
-            el.parentNode.insertBefore(errorDiv, el.nextSibling);
+            var t = document.createTextNode(validationsResult.message);
+            errorDiv.appendChild(t);
+            el.parentNode.insertBefore(errorDiv, el.nextElementSibling);
         }
 
     }
@@ -152,176 +143,195 @@ function Input(el, validatorsNameOptionsTuples, onInputValidationResult){
 Input.prototype = (function() {
 
     return {
-        reBindCheckedElement: reBindCheckedElement,
         triggerValidation: triggerValidation,
-        runValidators: runValidators,
-        changeEventType: changeEventType,
-        initListeners: initListeners,
         setGroup: setGroup,
-        addChangeListener: addChangeListener,
-        addEventType: addEventType,
-        removeActiveEventType: removeActiveEventType,
-        getUpdateInputValidationResultAsync: getUpdateInputValidationResultAsync,
-        updateInputValidationResult: updateInputValidationResult
+        reset: reset,
+        getDomElement: getDomElement,
+        _reBindCheckedElement: _reBindCheckedElement,
+        _runValidators: _runValidators,
+        _changeEventType: _changeEventType,
+        _initListeners: _initListeners,
+        _addChangeListener: _addChangeListener,
+        _addEventType: _addEventType,
+        _removeActiveEventType: _removeActiveEventType,
+        _getUpdateInputValidationResultAsync: _getUpdateInputValidationResultAsync,
+        _updateInputValidationResult: _updateInputValidationResult
     };
 
-    // public
-
-    function reBindCheckedElement(){
+    function _reBindCheckedElement() {
 
         // reBind only radio and checkbox buttons
-        if (!(this.el.nodeName.toLowerCase() === 'input' &amp;&amp; (this.el.type === 'radio' || this.el.type === 'checkbox' ))){
+        if (!(this._el.nodeName.toLowerCase() === 'input' &amp;&amp; (this._el.type === 'radio' || this._el.type === 'checkbox'))) {
             return;
         }
 
-        var checkedElement = document.querySelector('input[name="'+this.el.name+'"]:checked');
-        if (checkedElement){
-            this.el = checkedElement;
-            this.isNoneChecked  = false;
-        }
-        else{
-            this.isNoneChecked  = true;
+        var checkedElement = document.querySelector('input[name="' + this._el.name + '"]:checked');
+        if (checkedElement) {
+            this._el = checkedElement;
+            this._inputState.isNoneChecked = false;
+        } else {
+            this._inputState.isNoneChecked = true;
         }
 
     }
 
-    function triggerValidation(){
-        if (this.validationCycle === 0 || this.isChanged) {
+    function triggerValidation() {
+        if (this._inputState.validationCycle === 0 || this._inputState.isChanged) {
             this._runValidatorsBounded();
         }
     }
 
-    function changeEventType(eventType) {
-        if (!this.isKeyed) return;
-        if (eventType === this.activeEventType) return;
-        this.removeActiveEventType();
-        this.addEventType(eventType);
+    function _changeEventType(eventType) {
+        if (!this._isKeyed) return;
+        if (eventType === this._inputState.activeEventType) return;
+        this._removeActiveEventType();
+        this._addEventType(eventType);
     }
 
     function setGroup(value) {
-        this.group = value;
+        this._group = value;
     }
 
-    function initListeners() {
+    function getDomElement(){
+        return this._el;
+    }
 
-        this.addChangeListener();
-        if (this.isKeyed){
-            this.addEventType('blur');
-        }
-        else {
-            this.addEventType('change');
+    function _initListeners() {
+
+        this._addChangeListener();
+        if (this._isKeyed) {
+            this._addEventType('blur');
+        } else {
+            this._addEventType('change');
         }
 
     }
 
-    function runValidators(event, fromIndex){
+    function _runValidators(event, fromIndex) {
 
-        this.validationCycle++;
-        this.reBindCheckedElement();
+        this._inputState.validationCycle++;
+        this._reBindCheckedElement();
+
+        if (typeof this._group.getOnBeforeValidation() === 'function') {
+            this._group.getOnBeforeValidation()(this._el);
+        }
 
         var validationsResult, validatorName;
 
         var i = fromIndex || 0;
-        for (; i &lt; this.validators.length; i++){
-            var validator = this.validators[i];
-            var elementValue = this.isNoneChecked ? '' : this.el.value;
+        for (; i &lt; this._validators.length; i++) {
+            var validator = this._validators[i];
+            var elementValue = this._inputState.isNoneChecked ? '' : this._el.value;
             // if async, then return a pending enum with empty message and call the callback with result once ready
-            var validatorResult = validator.run(elementValue, this.getUpdateInputValidationResultAsync(validator.name, i, this.validationCycle));
-            if (validatorResult.stateEnum !== stateEnum.valid)
-                {
-                    validationsResult = validatorResult;
-                    validatorName = validator.name;
-                    this.changeEventType('input'); //TODO: call only once?
-                    break;
+            var validatorResult = validator.run(elementValue, this._getUpdateInputValidationResultAsync(validator.name, i, this._inputState.validationCycle));
+            if (validatorResult.stateEnum !== stateEnum.valid) {
+                validationsResult = validatorResult;
+                validatorName = validator.name;
+                if (!this._isBlurOnly) {
+                    this._changeEventType('input'); //TODO: call only once?
                 }
+                break;
+            }
 
         }
 
         validationsResult = validationsResult || new ValidationState('', stateEnum.valid);
-        this.updateInputValidationResult(validationsResult,validatorName);
+        this._updateInputValidationResult(validationsResult, validatorName);
 
-        // new...
-        this.isChanged = false; // TODO: move to top of function
+        this._inputState.isChanged = false; // TODO: move to top of function?
+
+        if (typeof this._group.getOnAfterValidation() === 'function') {
+            this._group.getOnAfterValidation()(this._el);
+        }
+
     }
 
-    // private
-
-    function addChangeListener(){
-        if (this.isKeyed){
-            this.el.addEventListener('input', function () { this.isChanged = true;}, false);
-        }
-
-        else if (this.elName === 'input' &amp;&amp; (this.elType === 'radio' || this.elType === 'checkbox')){
-
-            var groupElements =  document.querySelectorAll('input[name="'+this.el.name+'"]');
-
-            var i=0;
-            for (; i &lt;groupElements.length ; i++) {
-                groupElements[i].addEventListener('change', function (){this.isChanged = true;}, false);
-            }
-        }
-
-        else if(this.elName === 'select'){
-            this.el.addEventListener('change', function (){this.isChanged = true;}, false);
-        }
+    function reset() {
+        this._removeActiveEventType();
+        this._initListeners();
+        this._inputState = new InputState();
+        this._onInputValidationResult(this._el, stateEnum.valid, '', stateEnum); // called with valid state to clear any previous errors UI
     }
 
-    function addEventType(eventType) {
-        if (this.isKeyed){
-            this.el.addEventListener(eventType, this._runValidatorsBounded, false);
-        }
-
-        else if (this.elName === 'input' &amp;&amp; (this.elType === 'radio' || this.elType === 'checkbox')){
-
-            var groupElements =  document.querySelectorAll('input[name="'+this.el.name+'"]');
-
-            var i=0;
-            for (; i &lt;groupElements.length ; i++) {
-                groupElements[i].addEventListener(eventType, this._runValidatorsBounded, false);
-            }
-        }
-
-        else if(this.elName === 'select'){
-            this.el.addEventListener(eventType, this._runValidatorsBounded, false);
-        }
-
-        this.activeEventType = eventType;
-    }
-
-    function removeActiveEventType() {
-        this.el.removeEventListener(this.activeEventType, this._runValidatorsBounded, false);
-    }
-
-    function getUpdateInputValidationResultAsync(validatorName, validatorIndex, asyncValidationCycle) {
+    function _addChangeListener() {
 
         var self = this;
 
-        return function(validatorResult){
+        if (this._isKeyed) {
+            if (this._isBlurOnly) {
+                return;
+            } else {
+                this._el.addEventListener('input', function() {
+                    self._inputState.isChanged = true;
+                }, false);
+            }
+        } else if (this._elName === 'input' &amp;&amp; (this._elType === 'radio' || this._elType === 'checkbox')) {
+
+            var groupElements = document.querySelectorAll('input[name="' + this._el.name + '"]');
+
+            var i = 0;
+            for (; i &lt; groupElements.length; i++) {
+                groupElements[i].addEventListener('change', function() {
+                    self._inputState.isChanged = true;
+                }, false);
+            }
+        } else if (this._elName === 'select') {
+            this._el.addEventListener('change', function() {
+                self._inputState.isChanged = true;
+            }, false);
+        }
+    }
+
+    function _addEventType(eventType) {
+        if (this._isKeyed) {
+            this._el.addEventListener(eventType, this._runValidatorsBounded, false);
+        } else if (this._elName === 'input' &amp;&amp; (this._elType === 'radio' || this._elType === 'checkbox')) {
+
+            var groupElements = document.querySelectorAll('input[name="' + this._el.name + '"]');
+
+            var i = 0;
+            for (; i &lt; groupElements.length; i++) {
+                groupElements[i].addEventListener(eventType, this._runValidatorsBounded, false);
+            }
+        } else if (this._elName === 'select') {
+            this._el.addEventListener(eventType, this._runValidatorsBounded, false);
+        }
+
+        this._inputState.activeEventType = eventType;
+    }
+
+    function _removeActiveEventType() {
+        this._el.removeEventListener(this._inputState.activeEventType, this._runValidatorsBounded, false);
+    }
+
+    function _getUpdateInputValidationResultAsync(validatorName, validatorIndex, asyncValidationCycle) {
+
+        var self = this;
+
+        return function(validatorResult) {
 
             // guard against updating async validations from old cycles
-            if(asyncValidationCycle &amp;&amp; asyncValidationCycle !== self.validationCycle){
+            if (asyncValidationCycle &amp;&amp; asyncValidationCycle !== self._inputState.validationCycle) {
                 return;
             }
 
             // if pending turned to be valid, and there are more validation to run, run them:
-            if (validatorResult.stateEnum === stateEnum.valid &amp;&amp; validatorIndex+1 &lt; self.validators.length){
-                self._runValidatorsBounded(null,validatorIndex+1);
-            }
-
-            else {
-                self.updateInputValidationResult(validatorResult,validatorName);
+            if (validatorResult.stateEnum === stateEnum.valid &amp;&amp; validatorIndex + 1 &lt; self._validators.length) {
+                self._runValidatorsBounded(null, validatorIndex + 1);
+            } else {
+                self._updateInputValidationResult(validatorResult, validatorName);
             }
         };
 
     }
 
-    function updateInputValidationResult(validationsResult,validatorName) {
+    function _updateInputValidationResult(validationsResult, validatorName) {
 
-        this.group.updateGroupStates(this.validationState, validationsResult); // filter equal state at caller
-        this.group.updateGroupListeners();
+        this._group.updateGroupStates(this._inputState.validationState, validationsResult); // filter equal state at caller
+        this._group.updateGroupListeners();
 
-        this.validationState = validationsResult;
-        this.onInputValidationResult(this.el,validationsResult,validatorName,stateEnum);
+        this._inputState.validationState = validationsResult;
+        this._onInputValidationResult(this._el, validationsResult, validatorName, stateEnum);
 
     }
 
@@ -361,7 +371,7 @@ module.exports = Input;
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.3</a> on Sat Jan 02 2016 16:16:59 GMT+0200 (IST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.3</a> on Wed Apr 20 2016 20:07:21 GMT+0300 (IDT)
 </footer>
 
 <script> prettyPrint(); </script>
