@@ -1,7 +1,7 @@
 {
   "name": "vivalid",
-  "version": "0.2.1",
-  "description": "client side validations with async (client-server) support",
+  "version": "0.2.2",
+  "description": "client side validations with async (client-server) support. http://www.pazams.com/vivalid/",
   "main": "./lib/vivalid.js",
   "directories": {
     "test": "test"
