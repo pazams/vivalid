@@ -346,10 +346,10 @@ var ERROR = require('./constants').ERROR;
  * @param {function} [groupPendingChanged]
  * @param {function} [onBeforeValidation] Signature of {@link _internal.onBeforeValidation onBeforeValidation}. A function to be called before triggering any of the input's validators
  * @param {function} [onAfterValidation] Signature of {@link _internal.onAfterValidation onAfterValidation}. A function to be called after triggering all of the input's validators
- * @param {HTMLElement[]} [_resetElems] an array of elements that should trigger the group's validation _reset.
+ * @param {HTMLElement[]} [resetElems] an array of elements that should trigger the group's validation _reset.
 
  */
-function InputGroup(inputsArray, submitElems, onValidationSuccess, onValidationFailure, pendingUiStart, pendingUiStop, groupStatesChanged, groupPendingChanged, onBeforeValidation, onAfterValidation, _resetElems) {
+function InputGroup(inputsArray, submitElems, onValidationSuccess, onValidationFailure, pendingUiStart, pendingUiStop, groupStatesChanged, groupPendingChanged, onBeforeValidation, onAfterValidation, resetElems) {
 
     if (!onValidationSuccess || !onValidationFailure) throw ERROR.mandatorySuccessFailure;
 
@@ -415,8 +415,8 @@ function InputGroup(inputsArray, submitElems, onValidationSuccess, onValidationF
         submit.addEventListener('click', this._getOnSubmit.call(this));
     }, this);
 
-    if (_resetElems) {
-        this._resetElems = Array.prototype.slice.call(_resetElems);
+    if (resetElems) {
+        this._resetElems = Array.prototype.slice.call(resetElems);
         this._resetElems.forEach(function(submit) {
             submit.addEventListener('click', this.reset.bind(this));
         }, this);
@@ -570,7 +570,7 @@ module.exports = InputGroup;
  *  @memberof! _internal
  *  @param {HTMLElement[]} inputElems the group's input elements
  *  @param {HTMLElement[]} submitElems the group's submit elements
- *  @param {HTMLElement[]} _resetElems the group's _reset elements
+ *  @param {HTMLElement[]} resetElems the group's _reset elements
  */
 
 /** <b> IMPORTANT - the 'this' context inside: {HTMLElement} of the original submitElem that triggered the validation </b>
@@ -579,7 +579,7 @@ module.exports = InputGroup;
  *  @memberof! _internal
  *  @param {HTMLElement[]} inputElems the group's input elements
  *  @param {HTMLElement[]} submitElems the group's submit elements
- *  @param {HTMLElement[]} _resetElems the group's _reset elements
+ *  @param {HTMLElement[]} resetElems the group's _reset elements
  */
 
 /** A function to be called before triggering any of the input's validators
