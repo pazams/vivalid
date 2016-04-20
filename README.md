@@ -48,7 +48,7 @@ Demo: https://embed.plnkr.co/xtxe1YfsmxRR9hacZ3sn/
 
 ### Manual:
 * save and include: https://cdn.rawgit.com/pazams/vivalid/0.2.0/dist/vivalid-bundle.min.js
-* (optional) https://cdn.rawgit.com/pazams/vivalid-rules-core/0.2.0/dist/vivalid-rules-core-bundle.min.js
+* (optional) https://cdn.rawgit.com/pazams/vivalid-rules-core/master/dist/vivalid-rules-core-bundle.min.js
 
 ### npm:
 * `npm install vivalid`
