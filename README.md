@@ -10,15 +10,28 @@ Some constraints, such as "existing user" or "valid location", need to be valida
 ## Main features
 ### Consolidates Sync and Async validations
 Sync rules return with `stateEnum.invalid` or `stateEnum.valid`  
-Asyc rules return with `stateEnum.pending`, and also call a callback with `stateEnum.invalid` or `stateEnum.valid` when ready.
+Asyc rules return with `stateEnum.pending`, and also call a callback with `stateEnum.invalid` or `stateEnum.valid` when ready. Callbacks from previous cycles get filtered out, which helps when AJAX responses are out of order from multiple parallel requests.
+
+
+Demo: https://embed.plnkr.co/daGXkk1RrdRxjFWhQgwX/
+
 ### Full UI control 
 Either edit the UI through a CSS rule for `.vivalid-error` and `.vivalid-error-input` classes , or gain complete control by passing a [callback](http://pazams.github.io/vivalid/documentation/-_internal.html#..onInputValidationResult) that will be called with a DOM element, validation message, and validation state.
-### Data attributes interface
-Use this library with full javascript interface, or the data attributes html interface (with js to only define callbacks).
+
+Demo: https://embed.plnkr.co/JsA852mcYTTUHPoUf3F1/
+
+### JS api or data attributes interface
+Use this library with full [javascript api](http://www.pazams.com/vivalid/documentation/vivalid.html), or the data attributes html interface (with js to only define callbacks).
+
+
+
 ### Separation of validator rules
-No validator rules are included. Write your own, or also choose to include common ones from https://github.com/pazams/vivalid-rules-core
+No validator rules are included. Choose to include common ones from https://github.com/pazams/vivalid-rules-core, or write your own.
+
+Demo: https://embed.plnkr.co/Q6bTpj7PhqbQTBUZt166/
+
 ### Support for radio buttons and checkboxes
-see [here](http://pazams.github.io/vivalid/documentation/vivalid.Input.html)
+Demo: https://embed.plnkr.co/xtxe1YfsmxRR9hacZ3sn/
 
 
 ## Installation
@@ -41,142 +54,5 @@ See js [documentation](http://pazams.github.io/vivalid/documentation/vivalid.htm
 ## Data attributes html interface
 See js [documentation](http://pazams.github.io/vivalid/documentation/vivalid.html), plus a short example ([live here](http://pazams.github.io/vivalid/demos/1/)):
 
-**index.html**
-```html
-<!DOCTYPE html>
-<html>
-
-<head>
-  <script src="https://cdn.rawgit.com/pazams/vivalid/master/dist/vivalid-bundle.js"></script>
-  <script src="https://cdn.rawgit.com/pazams/vivalid-rules-core/master/dist/vivalid-rules-core-bundle.min.js"></script>
-  <script src="script.js"></script>
-</head>
-
-<body>
-<!-- inline css styles to make the exmaple work as a standalone without a css file -->
-  <h1>Html data attributes interface</h1>
-
-  <form id="MainForm" data-vivalid-group data-vivalid-on-validation='["onValidationSuccess", "onValidationFailure"]' data-vivalid-pending-ui='["pendingUiStart", "pendingUiStop"]'>
-
-    <div>
-      <input type="text" placeholder="First Name" data-vivalid-tuples='[["required",{}],["betweenlength",{"min": 4, "max": 10}]]' />
-    </div>
-
-      <div style="position: relative;">
-      
-      <input type="text" placeholder="User Name (type 'bob' and press send)" 
-      data-vivalid-tuples='[["required",{}],["exisitingUserBob",{}]]'
-      data-vivalid-result='onInputValidationResult'
-      />
-
-      <div class="js-message" style="background-color: blue; color: white; display: none; position: absolute; z-index: 1; padding: 6px; left: 122px; top: 0;">
-      </div>
-      
-    </div>
-
-    <div>
-      <input id="SendButton" type="button" value="send" data-vivalid-submit />
-    </div>
-    
-    <div id="MessageLogs">
-      
-    </div>
-
-  </form>
-
-</body>
-
-</html>
-```
-
-**script.js**
-```javascript
-var addValidatorBuilder = vivalid.validatorRepo.addBuilder;
-    var addCallback = vivalid.htmlInterface.addCallback;
-    var initAll = vivalid.htmlInterface.initAll;
-    
-    function messageLog(message){
-      var log = document.getElementById('MessageLogs');
-      log.innerHTML = log.innerHTML +'<br/>' + message;
-    }
-
-    addValidatorBuilder('exisitingUserBob', function(ValidationState, stateEnum, options) {
-
-      return function(value, callback) {
-
-        var msg = 'user bob exists';
-
-        setTimeout(dummyServiceCall, 3000);
-
-        return new ValidationState('', stateEnum.pending);
-
-        function dummyServiceCall() {
-
-          if (value.indexOf('bob') !== -1) {
-            callback(new ValidationState(msg, stateEnum.invalid));
-          } else {
-            callback(new ValidationState('', stateEnum.valid));
-          }
-        }
-      };
-    });
-
-    addCallback('onValidationSuccess', function() {
-      messageLog('HOORAY!!!! input group is valid and form will submit');
-    });
-
-    addCallback('onValidationFailure', function(invalid, pending, valid) {
-      messageLog('input group is invalid!: ' + invalid + ' invalid, ' + pending + ' pending, and ' + valid + ' valid ');
-    });
-
-    addCallback('pendingUiStart', function(inputElems, submitElems) {
-      messageLog('pendingUiStart');
-      inputElems.forEach(function(input) {
-        input.disabled = true;
-      });
-
-      submitElems.forEach(function(submit) {
-        submit.disabled = true;
-      });
-
-      this.style.backgroundColor = 'green';
-    });
-
-    addCallback('pendingUiStop', function(inputElems, submitElems) {
-            messageLog('pendingUiStop');
-      inputElems.forEach(function(input) {
-        input.disabled = false;
-      });
-
-      submitElems.forEach(function(submit) {
-        submit.disabled = false;
-      });
-
-      this.style.backgroundColor = 'blue';
-    });
-
-    // show casing a callback for custom UI
-    addCallback('onInputValidationResult', function(el, validationsResult, validatorName, stateEnum) {
-
-      var msgEl = el.parentNode.querySelector('.js-message');
-      var displayEl = msgEl;
-
-      if (validationsResult.stateEnum === stateEnum.invalid) {
-        displayEl.style.display = 'block';
-        msgEl.innerHTML = validationsResult.message;
-      } else {
-        displayEl.style.display = 'none';
-        msgEl.innerHTML = '';
-      }
-
-    });
-
-
-    initAll();
-```
-
 ## Contributers
 read [this](https://github.com/pazams/vivalid/issues/1) before attempting to `gulp build`
-
-## More demos
-Coming soon
